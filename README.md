@@ -1,18 +1,22 @@
 # n8n-nodes-assemblyai
+This is an n8n community node. It lets you use [AssemblyAI](https://www.assemblyai.com/) in your n8n workflows.
 
-This is an n8n community node. It lets you use AssemblyAI in your n8n workflows.
+[AssemblyAI](https://www.assemblyai.com/) develops industry-leading Speech AI models for transcription and audio understanding, accessible through their API. It provides features like speaker diarization, sentiment analysis, entity detection, PII redaction, and LeMUR (LLM framework) capabilities for processing transcripts.
 
-AssemblyAI develops industry-leading Speech AI models for transcription and audio understanding, accessible through their API. It provides features like speaker diarization, sentiment analysis, entity detection, PII redaction, and LeMUR (LLM framework) capabilities for processing transcripts.
+## Resources
+- [n8n community nodes documentation](https://docs.n8n.io/integrations/community-nodes/)
+- [AssemblyAI API reference](https://www.assemblyai.com/docs/api-reference)
+- [AssemblyAI API documentation](https://www.assemblyai.com/docs)
+  - [AssemblyAI Speech-to-Text guide](https://www.assemblyai.com/docs/getting-started/transcribe-an-audio-file)
+  - [AssemblyAI LeMUR guide](https://www.assemblyai.com/docs/lemur)
 
-[n8n](https://n8n.io/) is a [fair-code licensed](https://docs.n8n.io/reference/license/) workflow automation platform.
-
+## Quick links
 [Installation](#installation)  
-[Example Workflows](#example-workflows)  
+[Example workflows](#example-workflows)  
 [Operations](#operations)  
 [Credentials](#credentials)  
 [Compatibility](#compatibility)  
 [Usage](#usage)  
-[Resources](#resources)  
 [Version history](#version-history)
 
 ## Installation
@@ -25,8 +29,8 @@ To use this node, you need an AssemblyAI API key.
 
 ### Prerequisites
 
-1. Sign up for a free account at [AssemblyAI](https://www.assemblyai.com/) and receive $50 in free credits
-2. Navigate to your [API Keys page](https://www.assemblyai.com/dashboard/api-keys) in the dashboard
+1. Sign up for a free account at [AssemblyAI](https://www.assemblyai.com/) and receive $50 in free credits.
+2. Navigate to your [API Keys page](https://www.assemblyai.com/dashboard/api-keys) in the dashboard.
 
 ### Setup in n8n
 
@@ -63,26 +67,26 @@ Learn more about API keys in the [AssemblyAI documentation](https://www.assembly
 - **Get Response**: Retrieve a LeMUR response by ID
 - **Purge Data**: Delete LeMUR request data
 
-### Example Workflows
+### Example workflows
 
 You can import these example workflows directly into n8n:
 
-- [Basic Transcription](./examples/all-nodes.json) - Upload and transcribe an audio file
+- [All nodes example](./examples/all-nodes.json) - Runs through all possible AssemblyAI operations.
 
 To use: Download the JSON file, then in n8n go to **Workflows** → **Import from File**
 
 Basic transcription workflow:
 
-1. **Read Binary Files** node → Set file path to your audio file
+1. **Read/Write Files from Disk** node → Set file path to your audio file
 2. **AssemblyAI** node → Select "Upload" operation, use `data` as input
-3. **AssemblyAI** node → Select "Create" transcription, use the upload URL from step 2
+3. **AssemblyAI** node → Select "Create" transcription, use the upload URL from step 2. Alternatively, use a public URL and skip steps 1 and 2.
 
 ## Development
 
 To work on this node locally, clone the repository and install dependencies:
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/n8n-nodes-assemblyai.git
+git clone https://github.com/gsharp-aai/n8n-nodes-assemblyai.git
 cd n8n-nodes-assemblyai
 npm install
 ```
@@ -95,17 +99,13 @@ npm run dev:fresh
 
 The node will be available in n8n at http://localhost:5678
 
-## Resources
-
-- [n8n community nodes documentation](https://docs.n8n.io/integrations/community-nodes/)
-- [AssemblyAI API documentation](https://www.assemblyai.com/docs)
-- [AssemblyAI Speech-to-Text guide](https://www.assemblyai.com/docs/getting-started/transcribe-an-audio-file)
-- [AssemblyAI LeMUR guide](https://www.assemblyai.com/docs/lemur)
+## n8n
+[n8n](https://n8n.io/) is a [fair-code licensed](https://docs.n8n.io/reference/license/) workflow automation platform.
 
 ## License
 
 [MIT](LICENSE.md)
 
-## Version
+## Version history
 
 Current version: 0.1.0
