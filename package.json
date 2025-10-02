@@ -1,0 +1,61 @@
+{
+	"name": "n8n-nodes-assemblyai",
+	"version": "0.1.0",
+	"description": "n8n node for AssemblyAI speech-to-text transcription models.",
+	"license": "MIT",
+	"homepage": "https://www.assemblyai.com/docs",
+	"keywords": [
+		"n8n-community-node-package",
+		"n8n",
+		"assemblyai",
+		"transcription",
+		"speech to text",
+		"audio",
+		"video",
+		"lemur",
+		"ai"
+	],
+	"author": {
+		"name": "gsharp-aai",
+		"email": "gsharp@assemblyai.com"
+	},
+	"repository": {
+		"type": "git",
+		"url": ""
+	},
+	"scripts": {
+		"dev:fresh": "npm run clean && n8n-node lint && n8n-node build && n8n-node dev",
+		"clean": "rm -rf dist",
+		"dev": "n8n-node dev",
+		"build": "n8n-node build",
+		"build:watch": "tsc --watch",
+		"lint": "n8n-node lint",
+		"lint:fix": "n8n-node lint --fix",
+		"release": "n8n-node release",
+		"prepublishOnly": "n8n-node prerelease"
+	},
+	"files": [
+		"dist"
+	],
+	"n8n": {
+		"n8nNodesApiVersion": 1,
+		"credentials": [
+			"dist/credentials/AssemblyAiApi.credentials.js"
+		],
+		"nodes": [
+			"dist/nodes/Assemblyai/AssemblyAi.node.js"
+		]
+	},
+	"devDependencies": {
+		"@n8n/node-cli": "*",
+		"eslint": "9.32.0",
+		"prettier": "3.6.2",
+		"release-it": "^19.0.4",
+		"typescript": "5.9.2",
+		"@types/node": "^24.6.0"
+	},
+	"peerDependencies": {
+		"n8n-workflow": "*"
+	},
+	"dependencies": {}
+}
