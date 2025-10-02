@@ -21,7 +21,7 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": ""
+		"url": "https://github.com/gsharp-aai/n8n-nodes-assemblyai"
 	},
 	"scripts": {
 		"dev:fresh": "npm run clean && n8n-node lint && n8n-node build && n8n-node dev",
@@ -35,7 +35,8 @@
 		"prepublishOnly": "n8n-node prerelease"
 	},
 	"files": [
-		"dist"
+		"dist",
+    "examples"
 	],
 	"n8n": {
 		"n8nNodesApiVersion": 1,
