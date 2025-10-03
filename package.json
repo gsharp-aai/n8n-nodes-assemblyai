@@ -9,11 +9,12 @@
 		"n8n",
 		"assemblyai",
 		"transcription",
-		"speech to text",
+		"speech-to-text",
 		"audio",
 		"video",
 		"lemur",
-		"ai"
+		"ai",
+    "stt"
 	],
 	"author": {
 		"name": "gsharp-aai",
@@ -57,6 +58,5 @@
 	},
 	"peerDependencies": {
 		"n8n-workflow": "*"
-	},
-	"dependencies": {}
+	}
 }

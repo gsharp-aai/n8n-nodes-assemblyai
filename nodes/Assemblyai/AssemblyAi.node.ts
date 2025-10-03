@@ -35,7 +35,7 @@ export class AssemblyAi implements INodeType {
 			"Transcribe audio and video files using AssemblyAI's speech-to-text and speech understanding AI models.",
 		defaults: {
 			name: 'AssemblyAI',
-      // color: '#FF5722', 
+			color: '#2545D3',
 		},
 		inputs: ['main'],
 		outputs: ['main'],
@@ -148,12 +148,12 @@ export class AssemblyAi implements INodeType {
 						description: 'List all transcriptions',
 						action: 'List transcriptions',
 					},
-          {
-            name: 'Wait for Completion',
-            value: 'waitForCompletion',
-            description: 'Wait for a transcript to complete processing',
-            action: 'Wait for transcript completion',
-          },
+					{
+						name: 'Wait for Completion',
+						value: 'waitForCompletion',
+						description: 'Wait for a transcript to complete processing',
+						action: 'Wait for transcript completion',
+					},
 					{
 						name: 'Word Search',
 						value: 'wordSearch',
@@ -655,7 +655,7 @@ export class AssemblyAi implements INodeType {
 							'getSentences',
 							'getParagraphs',
 							'getRedactedAudio',
-              'waitForCompletion',
+							'waitForCompletion',
 							'wordSearch',
 						],
 					},
@@ -1067,7 +1067,7 @@ export class AssemblyAi implements INodeType {
 		const resource = this.getNodeParameter('resource', 0) as string;
 		const operation = this.getNodeParameter('operation', 0) as string;
 
-    const userAgent = `n8n-assemblyai-node/${AAI_NODE_VERSION}`;
+		const userAgent = `n8n-assemblyai-node/${AAI_NODE_VERSION}`;
 		const apiKey = credentials.apiKey as string;
 		const baseURL = 'https://api.assemblyai.com/v2';
 		const baseLemurURL = 'https://api.assemblyai.com/lemur/v3';
@@ -1086,10 +1086,11 @@ export class AssemblyAi implements INodeType {
 						if (items[i].binary && items[i].binary![fileInput]) {
 							fileData = Buffer.from(items[i].binary![fileInput].data, 'base64');
 						} else {
-              throw new NodeOperationError(
-                  this.getNode(),
-                  `No binary data found. Use a "Read/Write Files from Disk" node before this node.`,
-                );
+							throw new NodeOperationError(
+								this.getNode(),
+								`No binary data found. Use a "Read/Write Files from Disk" node before this node.`,
+								{ itemIndex: i },
+							);
 						}
 
 						responseData = await this.helpers.httpRequest({
@@ -1154,7 +1155,7 @@ export class AssemblyAi implements INodeType {
 							url: `${baseURL}/transcript/${transcriptId}`,
 							headers: {
 								Authorization: apiKey,
-							  'User-Agent': userAgent,
+								'User-Agent': userAgent,
 							},
 							json: true,
 						});
@@ -1293,15 +1294,18 @@ export class AssemblyAi implements INodeType {
 						});
 					} else if (operation === 'waitForCompletion') {
 						const transcriptId = this.getNodeParameter('transcriptId', i) as string;
-            const pollingInterval = 3000; // 3 seconds
+						const pollingInterval = 3000; // 3 seconds
 						const maxAttempts = 600; // 30 minutes with 3 second intervals
 						let attempts = 0;
 
 						while (attempts < maxAttempts) {
-							const response = await this.helpers.request({
+							const response = await this.helpers.httpRequest({
 								method: 'GET',
 								url: `${baseURL}/transcript/${transcriptId}`,
-								headers: { Authorization: apiKey },
+								headers: {
+									Authorization: apiKey,
+									'User-Agent': userAgent,
+								},
 								json: true,
 							});
 
@@ -1319,7 +1323,7 @@ export class AssemblyAi implements INodeType {
 							throw new NodeOperationError(
 								this.getNode(),
 								'Transcript did not complete within timeout period',
-                { itemIndex: i }
+								{ itemIndex: i },
 							);
 						}
 					}
