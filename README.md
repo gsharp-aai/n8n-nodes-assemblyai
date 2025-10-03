@@ -69,9 +69,12 @@ Learn more about API keys in the [AssemblyAI documentation](https://www.assembly
 
 ### Example workflows
 
+> [!WARNING] After importing, you'll need to set your AssemblyAI credentials on each node. Otherwise you will see: `"Problem in node ‘List transcriptions‘ Node does not have any credentials set"`.
+
 You can import these example workflows directly into n8n:
 
-- [All nodes example](./examples/all-nodes.json) - Runs through all possible AssemblyAI operations.
+- [All endpoints example](./examples/all-endpoints.json) - Runs through all possible AssemblyAI operations. Polling is handled by the AssemblyAI node `Wait for transcript completion`.
+- [All endpoints (with polling) example](./examples/all-endpoints-with-polling.json) - Runs through all possible AssemblyAI operations. Polling is done manually with n8n `Switch` and `Wait` nodes, and the AssemblyAI `Get a transcription` node.
 
 To use: Download the JSON file, then in n8n go to **Workflows** → **Import from File**
 
