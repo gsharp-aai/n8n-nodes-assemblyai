@@ -35,7 +35,7 @@ export class AssemblyAi implements INodeType {
 			"Transcribe audio and video files using AssemblyAI's speech-to-text and speech understanding AI models.",
 		defaults: {
 			name: 'AssemblyAI',
-			color: '#2545D3',
+			// color: '#2545D3',
 		},
 		inputs: ['main'],
 		outputs: ['main'],
