@@ -8,7 +8,7 @@ import type {
 export class AssemblyAiApi implements ICredentialType {
 	name = 'assemblyAiApi';
 	displayName = 'AssemblyAI API';
-	documentationUrl = 'https://www.assemblyai.com/docs/deployment/account-management#api-keys';
+	documentationUrl = 'https://github.com/gsharp-aai/n8n-nodes-assemblyai';
 
 	properties: INodeProperties[] = [
 		{

@@ -3,7 +3,7 @@
 	"version": "0.1.0",
 	"description": "n8n node for AssemblyAI speech-to-text transcription models.",
 	"license": "MIT",
-	"homepage": "https://www.assemblyai.com/docs",
+	"homepage": "https://github.com/gsharp-aai/n8n-nodes-assemblyai#readme",
 	"keywords": [
 		"n8n-community-node-package",
 		"n8n",
@@ -36,7 +36,7 @@
 	},
 	"files": [
 		"dist",
-    "examples"
+		"examples"
 	],
 	"n8n": {
 		"n8nNodesApiVersion": 1,
