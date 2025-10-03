@@ -1,6 +1,6 @@
 {
 	"name": "n8n-nodes-assemblyai",
-	"version": "0.1.3",
+	"version": "0.1.4",
 	"description": "n8n node for AssemblyAI speech-to-text transcription models.",
 	"license": "MIT",
 	"homepage": "https://github.com/gsharp-aai/n8n-nodes-assemblyai#readme",
