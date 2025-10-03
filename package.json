@@ -14,7 +14,7 @@
 		"video",
 		"lemur",
 		"ai",
-    "stt"
+		"stt"
 	],
 	"author": {
 		"name": "gsharp-assemblyai",
@@ -22,7 +22,7 @@
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/gsharp-aai/n8n-nodes-assemblyai"
+		"url": "git+https://github.com/gsharp-aai/n8n-nodes-assemblyai.git"
 	},
 	"scripts": {
 		"dev:fresh": "npm run clean && n8n-node lint && n8n-node build && n8n-node dev",
