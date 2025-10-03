@@ -69,7 +69,7 @@ Learn more about API keys in the [AssemblyAI documentation](https://www.assembly
 
 ### Example workflows
 
-> [!WARNING] After importing, you'll need to set your AssemblyAI credentials on each node. Otherwise you will see: `"Problem in node ‘List transcriptions‘ Node does not have any credentials set"`.
+⚠️ **Warning:** After importing, you'll need to set your AssemblyAI credentials on each node. Otherwise you will see: `"Problem in node ‘List transcriptions‘ Node does not have any credentials set"`.
 
 You can import these example workflows directly into n8n:
 
