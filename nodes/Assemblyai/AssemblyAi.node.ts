@@ -1315,7 +1315,7 @@ export class AssemblyAi implements INodeType {
 							}
 
 							// Wait pollingInterval seconds before next poll if still queued or processing.
-							await new Promise((resolve) => setTimeout(resolve, pollingInterval));
+							await new Promise((resolve) => globalThis.setTimeout(resolve, pollingInterval));
 							attempts++;
 						}
 
