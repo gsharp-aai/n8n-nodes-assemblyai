@@ -18,6 +18,8 @@ import {
 	IListAdditionalFields,
 } from './AssemblyAi.types';
 
+import { AAI_NODE_VERSION } from './version';
+
 export class AssemblyAi implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'AssemblyAI',
@@ -1065,6 +1067,7 @@ export class AssemblyAi implements INodeType {
 		const resource = this.getNodeParameter('resource', 0) as string;
 		const operation = this.getNodeParameter('operation', 0) as string;
 
+    const userAgent = `n8n-assemblyai-node/${AAI_NODE_VERSION}`;
 		const apiKey = credentials.apiKey as string;
 		const baseURL = 'https://api.assemblyai.com/v2';
 		const baseLemurURL = 'https://api.assemblyai.com/lemur/v3';
@@ -1095,6 +1098,7 @@ export class AssemblyAi implements INodeType {
 							headers: {
 								Authorization: apiKey,
 								'Content-Type': 'application/octet-stream',
+								'User-Agent': userAgent,
 							},
 							body: fileData,
 						});
@@ -1138,6 +1142,7 @@ export class AssemblyAi implements INodeType {
 							headers: {
 								Authorization: apiKey,
 								'Content-Type': 'application/json',
+								'User-Agent': userAgent,
 							},
 							body: JSON.stringify(body),
 						});
@@ -1149,6 +1154,7 @@ export class AssemblyAi implements INodeType {
 							url: `${baseURL}/transcript/${transcriptId}`,
 							headers: {
 								Authorization: apiKey,
+							  'User-Agent': userAgent,
 							},
 							json: true,
 						});
@@ -1160,6 +1166,7 @@ export class AssemblyAi implements INodeType {
 							url: `${baseURL}/transcript/${transcriptId}`,
 							headers: {
 								Authorization: apiKey,
+								'User-Agent': userAgent,
 							},
 							json: true,
 						});
@@ -1193,6 +1200,7 @@ export class AssemblyAi implements INodeType {
 							url: `${baseURL}/transcript`,
 							headers: {
 								Authorization: apiKey,
+								'User-Agent': userAgent,
 							},
 							qs,
 							json: true,
@@ -1212,6 +1220,7 @@ export class AssemblyAi implements INodeType {
 							url: `${baseURL}/transcript/${transcriptId}/${format}`,
 							headers: {
 								Authorization: apiKey,
+								'User-Agent': userAgent,
 							},
 							qs,
 						});
@@ -1223,6 +1232,7 @@ export class AssemblyAi implements INodeType {
 							url: `${baseURL}/transcript/${transcriptId}/sentences`,
 							headers: {
 								Authorization: apiKey,
+								'User-Agent': userAgent,
 							},
 							json: true,
 						});
@@ -1234,6 +1244,7 @@ export class AssemblyAi implements INodeType {
 							url: `${baseURL}/transcript/${transcriptId}/paragraphs`,
 							headers: {
 								Authorization: apiKey,
+								'User-Agent': userAgent,
 							},
 							json: true,
 						});
@@ -1245,6 +1256,7 @@ export class AssemblyAi implements INodeType {
 							url: `${baseURL}/transcript/${transcriptId}/redacted-audio`,
 							headers: {
 								Authorization: apiKey,
+								'User-Agent': userAgent,
 							},
 							json: true,
 						});
@@ -1272,6 +1284,7 @@ export class AssemblyAi implements INodeType {
 							url: `${baseURL}/transcript/${transcriptId}/word-search`,
 							headers: {
 								Authorization: apiKey,
+								'User-Agent': userAgent,
 							},
 							qs: {
 								words: words,
@@ -1319,6 +1332,7 @@ export class AssemblyAi implements INodeType {
 							url: `${baseLemurURL}/${requestId}`,
 							headers: {
 								Authorization: apiKey,
+								'User-Agent': userAgent,
 							},
 							json: true,
 						});
@@ -1330,6 +1344,7 @@ export class AssemblyAi implements INodeType {
 							url: `${baseLemurURL}/${requestId}`,
 							headers: {
 								Authorization: apiKey,
+								'User-Agent': userAgent,
 							},
 							json: true,
 						});
@@ -1362,6 +1377,7 @@ export class AssemblyAi implements INodeType {
 								headers: {
 									Authorization: apiKey,
 									'Content-Type': 'application/json',
+									'User-Agent': userAgent,
 								},
 								body: JSON.stringify(baseBody),
 							});
@@ -1409,6 +1425,7 @@ export class AssemblyAi implements INodeType {
 								headers: {
 									Authorization: apiKey,
 									'Content-Type': 'application/json',
+									'User-Agent': userAgent,
 								},
 								body: JSON.stringify(body),
 							});
@@ -1426,6 +1443,7 @@ export class AssemblyAi implements INodeType {
 								headers: {
 									Authorization: apiKey,
 									'Content-Type': 'application/json',
+									'User-Agent': userAgent,
 								},
 								body: JSON.stringify(body),
 							});
