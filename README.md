@@ -111,4 +111,4 @@ The node will be available in n8n at http://localhost:5678
 
 ## Version history
 
-Current version: 0.1.0
+Current version: 0.1.4
