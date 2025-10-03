@@ -73,7 +73,6 @@ Learn more about API keys in the [AssemblyAI documentation](https://www.assembly
 
 You can import these example workflows directly into n8n:
 
-- [All endpoints example](./examples/all-endpoints.json) - Runs through all possible AssemblyAI operations. Polling is handled by the AssemblyAI node `Wait for transcript completion`.
 - [All endpoints (with polling) example](./examples/all-endpoints-with-polling.json) - Runs through all possible AssemblyAI operations. Polling is done manually with n8n `Switch` and `Wait` nodes, and the AssemblyAI `Get a transcription` node.
 
 To use: Download the JSON file, then in n8n go to **Workflows** → **Import from File**

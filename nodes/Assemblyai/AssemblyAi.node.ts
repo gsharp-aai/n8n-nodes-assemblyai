@@ -149,12 +149,6 @@ export class AssemblyAi implements INodeType {
 						action: 'List transcriptions',
 					},
 					{
-						name: 'Wait for Completion',
-						value: 'waitForCompletion',
-						description: 'Wait for a transcript to complete processing',
-						action: 'Wait for transcript completion',
-					},
-					{
 						name: 'Word Search',
 						value: 'wordSearch',
 						description: 'Search for words in transcript',
@@ -655,7 +649,6 @@ export class AssemblyAi implements INodeType {
 							'getSentences',
 							'getParagraphs',
 							'getRedactedAudio',
-							'waitForCompletion',
 							'wordSearch',
 						],
 					},
@@ -1292,40 +1285,6 @@ export class AssemblyAi implements INodeType {
 							},
 							json: true,
 						});
-					} else if (operation === 'waitForCompletion') {
-						const transcriptId = this.getNodeParameter('transcriptId', i) as string;
-						const pollingInterval = 3000; // 3 seconds
-						const maxAttempts = 600; // 30 minutes with 3 second intervals
-						let attempts = 0;
-
-						while (attempts < maxAttempts) {
-							const response = await this.helpers.httpRequest({
-								method: 'GET',
-								url: `${baseURL}/transcript/${transcriptId}`,
-								headers: {
-									Authorization: apiKey,
-									'User-Agent': userAgent,
-								},
-								json: true,
-							});
-
-							if (response.status === 'completed' || response.status === 'error') {
-								responseData = response;
-								break;
-							}
-
-							// Wait pollingInterval seconds before next poll if still queued or processing.
-							await new Promise((resolve) => globalThis.setTimeout(resolve, pollingInterval));
-							attempts++;
-						}
-
-						if (attempts >= maxAttempts) {
-							throw new NodeOperationError(
-								this.getNode(),
-								'Transcript did not complete within timeout period',
-								{ itemIndex: i },
-							);
-						}
 					}
 				} else if (resource === 'lemur') {
 					if (operation === 'getResponse') {
