@@ -1051,6 +1051,7 @@ export class AssemblyAi implements INodeType {
 				description: 'Maximum number of tokens in the response',
 			},
 		],
+		usableAsTool: true,
 	};
 
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
@@ -1424,7 +1425,7 @@ export class AssemblyAi implements INodeType {
 
 				returnData.push({
 					json: typeof responseData === 'object' ? responseData : { data: responseData },
-					pairedItem: { item: i },
+					pairedItem: { item: i }
 				});
 			} catch (error) {
 				if (this.continueOnFail()) {
@@ -1433,7 +1434,7 @@ export class AssemblyAi implements INodeType {
 						json: {
 							error: errorMessage,
 						},
-						pairedItem: { item: i },
+						pairedItem: { item: i }
 					});
 					continue;
 				}
