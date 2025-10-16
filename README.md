@@ -1,4 +1,17 @@
 # n8n-nodes-assemblyai
+<p align="center">
+  <img src="./images/AAI_Primary.svg" alt="AssemblyAI Logo">
+</p>
+
+<p align="center">
+  <a href="https://www.npmjs.com/package/n8n-nodes-assemblyai">
+    <img src="https://badge.fury.io/js/n8n-nodes-assemblyai.svg" alt="npm version">
+  </a>
+  <a href="https://www.npmjs.com/package/n8n-nodes-assemblyai">
+    <img src="https://img.shields.io/npm/dm/n8n-nodes-assemblyai.svg" alt="npm downloads">
+  </a>
+</p>
+
 This is an n8n community node. It lets you use [AssemblyAI](https://www.assemblyai.com/) in your n8n workflows.
 
 [AssemblyAI](https://www.assemblyai.com/) develops industry-leading Speech AI models for transcription and audio understanding, accessible through their API. It provides features like speaker diarization, sentiment analysis, entity detection, PII redaction, and LeMUR (LLM framework) capabilities for processing transcripts.
