@@ -3,12 +3,17 @@ import type {
 	ICredentialTestRequest,
 	ICredentialType,
 	INodeProperties,
+  Icon
 } from 'n8n-workflow';
 
 export class AssemblyAiApi implements ICredentialType {
 	name = 'assemblyAiApi';
 	displayName = 'AssemblyAI API';
 	documentationUrl = 'https://github.com/gsharp-aai/n8n-nodes-assemblyai';
+  icon: Icon = {
+    light: 'file:../nodes/Assemblyai/assemblyai.light.svg',
+    dark: 'file:../nodes/Assemblyai/assemblyai.dark.svg',
+  };
 
 	properties: INodeProperties[] = [
 		{
