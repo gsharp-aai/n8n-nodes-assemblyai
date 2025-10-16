@@ -1424,6 +1424,7 @@ export class AssemblyAi implements INodeType {
 
 				returnData.push({
 					json: typeof responseData === 'object' ? responseData : { data: responseData },
+					pairedItem: { item: i },
 				});
 			} catch (error) {
 				if (this.continueOnFail()) {
@@ -1432,6 +1433,7 @@ export class AssemblyAi implements INodeType {
 						json: {
 							error: errorMessage,
 						},
+						pairedItem: { item: i },
 					});
 					continue;
 				}
