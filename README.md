@@ -11,6 +11,7 @@
   <a href="https://www.npmjs.com/package/n8n-nodes-assemblyai">
     <img src="https://badge.fury.io/js/n8n-nodes-assemblyai.svg" alt="npm version">
   </a>
+  &nbsp;
   <a href="https://www.npmjs.com/package/n8n-nodes-assemblyai">
     <img src="https://img.shields.io/npm/dm/n8n-nodes-assemblyai.svg" alt="npm downloads">
   </a>
