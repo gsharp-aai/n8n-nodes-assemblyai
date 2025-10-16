@@ -6,11 +6,12 @@
     <img src="./images/AAI_Light_Mode.svg" alt="AssemblyAI Logo">
   </picture>
 </p>
+<div align="center">
 
-<p align="center">
-  <img src="https://badge.fury.io/js/n8n-nodes-assemblyai.svg" alt="npm version">
-  <img src="https://img.shields.io/npm/dm/n8n-nodes-assemblyai.svg" alt="npm downloads">
-</p>
+[![npm version](https://badge.fury.io/js/n8n-nodes-assemblyai.svg)](https://www.npmjs.com/package/n8n-nodes-assemblyai)
+[![npm downloads](https://img.shields.io/npm/dm/n8n-nodes-assemblyai.svg)](https://www.npmjs.com/package/n8n-nodes-assemblyai)
+
+</div>
 
 This is an n8n community node. It lets you use [AssemblyAI](https://www.assemblyai.com/) in your n8n workflows.
 
