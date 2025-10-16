@@ -1,6 +1,10 @@
 # n8n-nodes-assemblyai
 <p align="center">
-  <img src="./images/AAI_Primary.svg" alt="AssemblyAI Logo">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./images/AAI_Dark_Mode.svg">
+    <source media="(prefers-color-scheme: light)" srcset="./images/AAI_Light_Mode.svg">
+    <img src="./images/AAI_Light_Mode.svg" alt="AssemblyAI Logo">
+  </picture>
 </p>
 
 <p align="center">
