@@ -513,7 +513,7 @@ export class AssemblyAi implements INodeType {
 										typeOptions: {
 											minValue: 0,
 											maxValue: 1,
-											fnumberStepSize: 0.1,
+											numberStepSize: 0.1,
 										},
 										displayOptions: {
 											show: {
