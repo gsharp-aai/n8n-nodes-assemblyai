@@ -1,0 +1,5 @@
+{
+  "hooks": {
+    "before:git:release": "node scripts/sync-version.js && git add nodes/Assemblyai/version.ts"
+  }
+}
