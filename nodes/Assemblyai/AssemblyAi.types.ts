@@ -1,11 +1,17 @@
 export interface IAdditionalFields {
 	// Speech recognition options
 	speech_model?: 'universal' | 'slam-1';
+	speech_models?: string; // Comma-separated list
 	language_code?: string;
+	language_codes?: string; // Comma-separated list for code switching
 	language_detection?: boolean;
 	language_detection_options?: {
-		expected_languages?: string[];
-		fallback_language?: string;
+		options?: {
+			expected_languages?: string;
+			fallback_language?: string;
+			code_switching?: boolean;
+			code_switching_confidence_threshold?: number;
+		};
 	};
 	language_confidence_threshold?: number;
 	punctuate?: boolean;
@@ -20,8 +26,10 @@ export interface IAdditionalFields {
 	speaker_labels?: boolean;
 	speakers_expected?: number | null;
 	speaker_options?: {
-		min_speakers_expected?: number;
-		max_speakers_expected?: number;
+		options?: {
+			min_speakers_expected?: number;
+			max_speakers_expected?: number;
+		};
 	};
 
 	// Audio intelligence features
@@ -43,7 +51,9 @@ export interface IAdditionalFields {
 	redact_pii_audio?: boolean;
 	redact_pii_audio_quality?: 'mp3' | 'wav';
 	redact_pii_audio_options?: {
-		return_redacted_no_speech_audio?: boolean;
+		options?: {
+			return_redacted_no_speech_audio?: boolean;
+		};
 	};
 	redact_pii_policies?: string[];
 
@@ -55,6 +65,28 @@ export interface IAdditionalFields {
 	// Custom vocabulary - using our defined types
 	keyterms_prompt?: IKeyTermsCollection;
 	custom_spelling?: ICustomSpellingCollection;
+
+	// Speech Understanding
+	speech_understanding_translation?: {
+		translation?: {
+			target_languages?: string;
+			formal?: boolean;
+			match_original_utterance?: boolean;
+		};
+	};
+	speech_understanding_speaker_id?: {
+		speaker_identification?: {
+			speaker_type?: 'role' | 'name';
+			known_values?: string;
+		};
+	};
+	speech_understanding_formatting?: {
+		custom_formatting?: {
+			date_format?: string;
+			phone_number_format?: string;
+			email_format?: string;
+		};
+	};
 }
 
 export interface IListAdditionalFields {
@@ -89,11 +121,15 @@ export interface ITranscriptCreateBody {
 
 	// Speech recognition options
 	speech_model?: 'universal' | 'slam-1' | 'best';
+	speech_models?: string[]; // Array of speech models in priority order
 	language_code?: string;
+	language_codes?: string[]; // Array for code switching
 	language_detection?: boolean;
 	language_detection_options?: {
 		expected_languages?: string[];
 		fallback_language?: string;
+		code_switching?: boolean;
+		code_switching_confidence_threshold?: number;
 	};
 	language_confidence_threshold?: number;
 	punctuate?: boolean;
@@ -147,6 +183,26 @@ export interface ITranscriptCreateBody {
 		from: string[];
 		to: string;
 	}>;
+
+	// Speech Understanding
+	speech_understanding?: {
+		request: {
+			translation?: {
+				target_languages: string[];
+				formal?: boolean;
+				match_original_utterance?: boolean;
+			};
+			speaker_identification?: {
+				speaker_type: 'role' | 'name';
+				known_values?: string[];
+			};
+			custom_formatting?: {
+				date?: string;
+				phone_number?: string;
+				email?: string;
+			};
+		};
+	};
 }
 
 export interface IQueryParams {

@@ -15,23 +15,22 @@
 
 This is an n8n community node. It lets you use [AssemblyAI](https://www.assemblyai.com/) in your n8n workflows.
 
-[AssemblyAI](https://www.assemblyai.com/) develops industry-leading Speech AI models for transcription and audio understanding, accessible through their API. It provides features like speaker diarization, sentiment analysis, entity detection, PII redaction, and LeMUR (LLM framework) capabilities for processing transcripts.
+[AssemblyAI](https://www.assemblyai.com/) develops industry-leading Speech AI models for transcription and audio understanding, accessible through their API. It provides features like speaker diarization, sentiment analysis, entity detection, PII redaction, and LLM Gateway capabilities for processing transcripts with AI.
 
 ## Resources
 - [n8n community nodes documentation](https://docs.n8n.io/integrations/community-nodes/)
 - [AssemblyAI API reference](https://www.assemblyai.com/docs/api-reference)
 - [AssemblyAI API documentation](https://www.assemblyai.com/docs)
   - [AssemblyAI Speech-to-Text guide](https://www.assemblyai.com/docs/getting-started/transcribe-an-audio-file)
-  - [AssemblyAI LeMUR guide](https://www.assemblyai.com/docs/lemur)
+  - [AssemblyAI LLM Gateway guide](https://www.assemblyai.com/docs/llm-gateway/apply-llms-to-audio-files)
+  - [AssemblyAI LeMUR guide](https://www.assemblyai.com/docs/lemur) - ⚠️ **Deprecated**: LeMUR is deprecated. Please use LLM Gateway instead.
 
 ## Quick links
-[Installation](#installation)  
-[Example workflows](#example-workflows)  
-[Operations](#operations)  
-[Credentials](#credentials)  
-[Compatibility](#compatibility)  
-[Usage](#usage)  
-[Version history](#version-history)
+- [Installation](#installation)
+- [Credentials](#credentials)
+- [Operations](#operations)
+- [Development](#development)
+- [Support & Feedback](#support--feedback)
 
 ## Installation
 
@@ -57,13 +56,19 @@ Learn more about API keys in the [AssemblyAI documentation](https://www.assembly
 
 ## Operations
 
-### File
+### File ([API Reference](https://www.assemblyai.com/docs/api-reference/files/upload))
 
 - **Upload**: Upload a media file to AssemblyAI for transcription
 
-### Transcript
+### Transcript ([API Reference](https://www.assemblyai.com/docs/api-reference/transcripts/submit))
 
-- **Create**: Start a new transcription job
+- **Create**: Start a new transcription job with support for:
+  - Language detection
+  - Speaker diarization
+  - PII redaction and profanity filtering
+  - **Speech Understanding**:
+    - Enable translation, speaker identification, and/or custom formatting during transcription
+    - Keyterm prompting, punctuation, disfluencies, formatting, sentiment analysis, entity detection, chapterization, etc.
 - **Get**: Retrieve a transcription by ID
 - **Delete**: Delete a transcription
 - **List**: List all your transcriptions
@@ -73,29 +78,23 @@ Learn more about API keys in the [AssemblyAI documentation](https://www.assembly
 - **Get Redacted Audio**: Get redacted audio URL
 - **Word Search**: Search for specific words in the transcript
 
+### LLM Gateway ([API Reference](https://www.assemblyai.com/docs/api-reference/llm-gateway/create-chat-completion))
+
+- **Chat Completion**: Send chat completion requests to LLMs (Claude, GPT, Gemini models). See [available models](https://www.assemblyai.com/docs/llm-gateway/overview#available-models).
+- **Speech Understanding**: Process speech understanding tasks on existing transcripts:
+  - **Translation**: Translate transcripts into multiple languages
+  - **Speaker Identification**: Identify speakers by name or role
+  - **Custom Formatting**: Apply custom formatting to dates, phone numbers, and emails
+
 ### LeMUR
+
+⚠️ **Deprecated**: LeMUR is deprecated. Please use LLM Gateway instead.
 
 - **Summary**: Generate AI summaries of transcripts
 - **Question & Answer**: Ask questions about your transcripts
 - **Custom Task**: Run custom AI tasks on transcripts
 - **Get Response**: Retrieve a LeMUR response by ID
 - **Purge Data**: Delete LeMUR request data
-
-### Example workflows
-
-⚠️ **Warning:** After importing, you'll need to set your AssemblyAI credentials on each node. Otherwise you will see: `"Problem in node ‘List transcriptions‘ Node does not have any credentials set"`.
-
-You can import these example workflows directly into n8n:
-
-- [All endpoints (with polling) example](./examples/all-endpoints-with-polling.json) - Runs through all possible AssemblyAI operations. Polling is done manually with n8n `Switch` and `Wait` nodes, and the AssemblyAI `Get a transcription` node.
-
-To use: Download the JSON file, then in n8n go to **Workflows** → **Import from File**
-
-Basic transcription workflow:
-
-1. **Read/Write Files from Disk** node → Set file path to your audio file
-2. **AssemblyAI** node → Select "Upload" operation, use `data` as input
-3. **AssemblyAI** node → Select "Create" transcription, use the upload URL from step 2. Alternatively, use a public URL and skip steps 1 and 2.
 
 ## Development
 
@@ -115,6 +114,14 @@ npm run dev:fresh
 
 The node will be available in n8n at http://localhost:5678
 
+## Support & Feedback
+
+Need help or have feedback? Reach out to [support@assemblyai.com](mailto:support@assemblyai.com).
+
+Stay up to date with the latest features and improvements:
+- [AssemblyAI Product Changelog](https://www.assemblyai.com/changelog)
+- [AssemblyAI Product Roadmap](https://assemblyai.com/roadmap)
+
 ## n8n
 [n8n](https://n8n.io/) is a [fair-code licensed](https://docs.n8n.io/reference/license/) workflow automation platform.
 
@@ -122,6 +129,3 @@ The node will be available in n8n at http://localhost:5678
 
 [MIT](LICENSE.md)
 
-## Version history
-
-Current version: 0.1.4
