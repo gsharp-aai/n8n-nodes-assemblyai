@@ -11,10 +11,8 @@ import {
 	IKeyTermsCollection,
 	ICustomSpellingCollection,
 	IWordsCollection,
-	IQuestionsCollection,
 	IQueryParams,
 	ITranscriptCreateBody,
-	ILemurBaseBody,
 	IListAdditionalFields,
 } from './AssemblyAi.types';
 
@@ -55,11 +53,6 @@ export class AssemblyAi implements INodeType {
 					{
 						name: 'File',
 						value: 'file',
-					},
-					{
-						name: 'LeMUR (Deprecated)',
-						value: 'lemur',
-						description: 'LeMUR is deprecated. Please use LLM Gateway instead.',
 					},
 					{
 						name: 'LLM Gateway',
@@ -161,53 +154,6 @@ export class AssemblyAi implements INodeType {
 					},
 				],
 				default: 'create',
-			},
-			// LeMUR Operations
-			{
-				displayName: 'Operation',
-				name: 'operation',
-				type: 'options',
-				noDataExpression: true,
-				displayOptions: {
-					show: {
-						resource: ['lemur'],
-					},
-				},
-				options: [
-					{
-						name: 'Custom Task',
-						value: 'task',
-						description: 'Run a custom LeMUR task',
-						action: 'Run custom task',
-					},
-					{
-						name: 'Get Response',
-						value: 'getResponse',
-						description: 'Get a LeMUR response by ID',
-						// eslint-disable-next-line n8n-nodes-base/node-param-operation-option-action-miscased
-						action: 'Get LeMUR response',
-					},
-					{
-						name: 'Purge Data',
-						value: 'purgeData',
-						description: 'Delete LeMUR request data',
-						// eslint-disable-next-line n8n-nodes-base/node-param-operation-option-action-miscased
-						action: 'Purge LeMUR data',
-					},
-					{
-						name: 'Question & Answer',
-						value: 'questionAnswer',
-						description: 'Ask questions about your transcript',
-						action: 'Question and answer',
-					},
-					{
-						name: 'Summary',
-						value: 'summary',
-						description: 'Generate a summary using LeMUR',
-						action: 'Generate summary',
-					},
-				],
-				default: 'summary',
 			},
 			// File Upload fields
 			{
@@ -343,6 +289,17 @@ export class AssemblyAi implements INodeType {
 						description: "Whether to transcribe filler words like 'umm'",
 					},
 					{
+						displayName: 'Domain',
+						name: 'domain',
+						type: 'options',
+						default: '',
+						options: [
+							{ name: 'None', value: '' },
+							{ name: 'Medical (Medical-V1)', value: 'medical-v1' },
+						],
+						description: 'Domain-specific transcription mode. Supported with Universal-2 and Universal-3 Pro.',
+					},
+					{
 						displayName: 'Dual Channel',
 						name: 'dual_channel',
 						type: 'boolean',
@@ -400,6 +357,33 @@ export class AssemblyAi implements INodeType {
 										default: '',
 										description: 'Word or phrase (max 6 words) that may appear in audio',
 										placeholder: 'e.g., differential diagnosis, hypertension',
+									},
+								],
+							},
+						],
+					},
+					{
+						displayName: 'Keyterms Prompt Options',
+						name: 'keyterms_prompt_options',
+						type: 'fixedCollection',
+						default: {},
+						description: 'Options applied to the keyterms prompt. Only takes effect when Key Terms are configured.',
+						options: [
+							{
+								name: 'options',
+								displayName: 'Options',
+								values: [
+									{
+										displayName: 'Match Strength',
+										name: 'keyterms_match_strength',
+										type: 'options',
+										default: '',
+										options: [
+											{ name: 'Default', value: '' },
+											{ name: 'High', value: 'high' },
+											{ name: 'Standard', value: 'standard' },
+										],
+										description: 'Match strength used by the keyterms prompt boost',
 									},
 								],
 							},
@@ -499,13 +483,6 @@ export class AssemblyAi implements INodeType {
 											'Language to use if detected language is not in expected list. Use "auto" to let the model choose.',
 									},
 									{
-										displayName: 'Enable Code Switching',
-										name: 'code_switching',
-										type: 'boolean',
-										default: false,
-										description: 'Whether to detect when the speaker switches between languages',
-									},
-									{
 										displayName: 'Code Switching Confidence Threshold',
 										name: 'code_switching_confidence_threshold',
 										type: 'number',
@@ -515,12 +492,18 @@ export class AssemblyAi implements INodeType {
 											maxValue: 1,
 											numberStepSize: 0.1,
 										},
-										displayOptions: {
-											show: {
-												code_switching: [true],
-											},
-										},
-										description: 'Confidence threshold for detecting code switching (0-1)',
+										description: 'Confidence threshold for detecting code switching (0-1). For multi-language transcription, configure the top-level Language Codes field.',
+									},
+									{
+										displayName: 'On Low Language Confidence',
+										name: 'on_low_language_confidence',
+										type: 'options',
+										default: 'error',
+										options: [
+											{ name: 'Error', value: 'error' },
+											{ name: 'Fallback', value: 'fallback' },
+										],
+										description: 'Behavior when detected language confidence is below the threshold',
 									},
 								],
 							},
@@ -532,6 +515,16 @@ export class AssemblyAi implements INodeType {
 						type: 'boolean',
 						default: false,
 						description: 'Whether to enable multichannel transcription',
+					},
+					{
+						displayName: 'Prompt',
+						name: 'prompt',
+						type: 'string',
+						typeOptions: {
+							rows: 4,
+						},
+						default: '',
+						description: 'Context prompt used to steer transcription style and accuracy. Supported on Universal-3 Pro. Max 1500 words. Mutually exclusive with Key Terms.',
 					},
 					{
 						displayName: 'Punctuate',
@@ -578,6 +571,17 @@ export class AssemblyAi implements INodeType {
 										description:
 											'Whether to receive redacted audio URLs even for silent audio files without dialogue',
 									},
+									{
+										displayName: 'Override Audio Redaction Method',
+										name: 'override_audio_redaction_method',
+										type: 'options',
+										default: '',
+										options: [
+											{ name: 'Default (Beep)', value: '' },
+											{ name: 'Silence', value: 'silence' },
+										],
+										description: 'Method used to redact PII in the audio. Set to Silence to replace PII with silence instead of the default beep.',
+									},
 								],
 							},
 						],
@@ -607,32 +611,47 @@ export class AssemblyAi implements INodeType {
 							{ name: 'Account Number', value: 'account_number' },
 							{ name: 'Banking Information', value: 'banking_information' },
 							{ name: 'Blood Type', value: 'blood_type' },
+							{ name: 'Corporate Action (Beta)', value: 'corporate_action' },
 							{ name: 'Credit Card CVV', value: 'credit_card_cvv' },
 							{ name: 'Credit Card Expiration', value: 'credit_card_expiration' },
 							{ name: 'Credit Card Number', value: 'credit_card_number' },
 							{ name: 'Date', value: 'date' },
 							{ name: 'Date Interval', value: 'date_interval' },
 							{ name: 'Date of Birth', value: 'date_of_birth' },
+							{ name: 'Day (Beta)', value: 'day' },
 							{ name: 'Drivers License', value: 'drivers_license' },
 							{ name: 'Drug', value: 'drug' },
 							{ name: 'Duration', value: 'duration' },
+							{ name: 'Effect (Beta)', value: 'effect' },
 							{ name: 'Email Address', value: 'email_address' },
 							{ name: 'Event', value: 'event' },
 							{ name: 'Filename', value: 'filename' },
+							{ name: 'Financial Metric (Beta)', value: 'financial_metric' },
 							{ name: 'Gender/Sexuality', value: 'gender_sexuality' },
 							{ name: 'Healthcare Number', value: 'healthcare_number' },
 							{ name: 'Injury', value: 'injury' },
 							{ name: 'IP Address', value: 'ip_address' },
 							{ name: 'Language', value: 'language' },
 							{ name: 'Location', value: 'location' },
+							{ name: 'Location Address', value: 'location_address' },
+							{ name: 'Location Address Street', value: 'location_address_street' },
+							{ name: 'Location City', value: 'location_city' },
+							{ name: 'Location Coordinate', value: 'location_coordinate' },
+							{ name: 'Location Country', value: 'location_country' },
+							{ name: 'Location State', value: 'location_state' },
+							{ name: 'Location Zip', value: 'location_zip' },
 							{ name: 'Marital Status', value: 'marital_status' },
+							{ name: 'Medical Code (Beta)', value: 'medical_code' },
 							{ name: 'Medical Condition', value: 'medical_condition' },
 							{ name: 'Medical Process', value: 'medical_process' },
 							{ name: 'Money Amount', value: 'money_amount' },
+							{ name: 'Month (Beta)', value: 'month' },
 							{ name: 'Nationality', value: 'nationality' },
 							{ name: 'Number Sequence', value: 'number_sequence' },
 							{ name: 'Occupation', value: 'occupation' },
 							{ name: 'Organization', value: 'organization' },
+							{ name: 'Organization ID (Beta)', value: 'organization_id' },
+							{ name: 'Organization Medical Facility', value: 'organization_medical_facility' },
 							{ name: 'Passport Number', value: 'passport_number' },
 							{ name: 'Password', value: 'password' },
 							{ name: 'Person Age', value: 'person_age' },
@@ -640,15 +659,17 @@ export class AssemblyAi implements INodeType {
 							{ name: 'Phone Number', value: 'phone_number' },
 							{ name: 'Physical Attribute', value: 'physical_attribute' },
 							{ name: 'Political Affiliation', value: 'political_affiliation' },
+							{ name: 'Product (Beta)', value: 'product' },
+							{ name: 'Project (Beta)', value: 'project' },
 							{ name: 'Religion', value: 'religion' },
 							{ name: 'Statistics', value: 'statistics' },
 							{ name: 'Time', value: 'time' },
+							{ name: 'Trend (Beta)', value: 'trend' },
 							{ name: 'URL', value: 'url' },
-							{ name: 'US Driver License', value: 'us_driver_license' },
-							{ name: 'US Healthcare Number', value: 'us_healthcare_number' },
 							{ name: 'US Social Security Number', value: 'us_social_security_number' },
 							{ name: 'Username', value: 'username' },
 							{ name: 'Vehicle ID', value: 'vehicle_id' },
+							{ name: 'Year (Beta)', value: 'year' },
 							{ name: 'Zodiac Sign', value: 'zodiac_sign' },
 						],
 						displayOptions: {
@@ -657,6 +678,18 @@ export class AssemblyAi implements INodeType {
 							},
 						},
 						description: 'Types of PII to redact',
+					},
+					{
+						displayName: 'Redact PII Return Unredacted',
+						name: 'redact_pii_return_unredacted',
+						type: 'boolean',
+						default: false,
+						displayOptions: {
+							show: {
+								redact_pii: [true],
+							},
+						},
+						description: 'Whether to also return the unredacted transcript alongside the redacted one',
 					},
 					{
 						displayName: 'Redact PII Substitution',
@@ -673,6 +706,17 @@ export class AssemblyAi implements INodeType {
 							},
 						},
 						description: 'How to replace redacted PII in transcript',
+					},
+					{
+						displayName: 'Remove Audio Tags',
+						name: 'remove_audio_tags',
+						type: 'options',
+						default: '',
+						options: [
+							{ name: 'None', value: '' },
+							{ name: 'All', value: 'all' },
+						],
+						description: 'Strip inline audio tags like [laughter], [music], and speaker cues from the transcript output. Universal-3 Pro only.',
 					},
 					{
 						displayName: 'Sentiment Analysis',
@@ -705,24 +749,97 @@ export class AssemblyAi implements INodeType {
 								name: 'options',
 								displayName: 'Options',
 								values: [
-									{
-										displayName: 'Minimum Speakers Expected',
-										name: 'min_speakers_expected',
-										type: 'number',
-										default: 1,
-										description: 'The minimum number of speakers expected in the audio file',
-									},
-									{
-										displayName: 'Maximum Speakers Expected',
-										name: 'max_speakers_expected',
-										type: 'number',
-										default: 10,
-										description:
-											'The maximum number of speakers expected. Setting this too high may hurt accuracy.',
-									},
+							{
+								displayName: 'Advanced Speaker Segmentation',
+								name: 'advanced_speaker_segmentation',
+								type: 'boolean',
+								default: false,
+								description: 'Whether to use advanced speaker segmentation for finer-grained turns',
+							},
+							{
+								displayName: 'Enforce Sentence-Level Consistency',
+								name: 'enforce_sentence_level_consistency',
+								type: 'boolean',
+								default: false,
+								description: 'Whether to enforce a single speaker label per sentence',
+							},
+							{
+								displayName: 'Long File Diarization Method',
+								name: 'long_file_diarization_method',
+								type: 'options',
+								default: '',
+								options: [
+									{ name: 'Default', value: '' },
+									{ name: 'Experimental', value: 'experimental' },
+									{ name: 'Standard', value: 'standard' },
+								],
+								description: 'Clustering strategy used for long audio files',
+							},
+							{
+								displayName: 'Maximum Speakers Expected',
+								name: 'max_speakers_expected',
+								type: 'number',
+								default: 10,
+								description: 'The maximum number of speakers expected. Setting this too high may hurt accuracy.',
+							},
+							{
+								displayName: 'Minimum Speakers Expected',
+								name: 'min_speakers_expected',
+								type: 'number',
+								default: 1,
+								description: 'The minimum number of speakers expected in the audio file',
+							},
+							{
+								displayName: 'Short File Diarization Method',
+								name: 'short_file_diarization_method',
+								type: 'options',
+								default: '',
+								options: [
+									{ name: 'Aggressive', value: 'aggressive' },
+									{ name: 'Balanced', value: 'balanced' },
+									{ name: 'Conservative', value: 'conservative' },
+									{ name: 'Default', value: '' },
+									{ name: 'Deliberate', value: 'deliberate' },
+								],
+								description: 'Clustering strategy used for short audio files',
+							},
+							{
+								displayName: 'Speaker Labels Model',
+								name: 'speaker_labels_model',
+								type: 'options',
+								default: '',
+								options: [
+									{ name: 'Default', value: '' },
+									{ name: 'Experimental', value: 'experimental' },
+									{ name: 'Standard', value: 'standard' },
+								],
+								description: 'Speaker labels model. The API maps this to the underlying short and long file diarization methods.',
+							},
+							{
+								displayName: 'Use Two-Stage Clustering',
+								name: 'use_two_stage_clustering',
+								type: 'boolean',
+								default: false,
+								description: 'Whether to enable two-stage speaker clustering for improved diarization accuracy',
+							},
 								],
 							},
 						],
+					},
+					{
+						displayName: 'Speakers Expected',
+						name: 'speakers_expected',
+						type: 'number',
+						default: 0,
+						typeOptions: {
+							minValue: 0,
+						},
+						displayOptions: {
+							show: {
+								speaker_labels: [true],
+							},
+						},
+						description: 'Expected total number of speakers. Leave at 0 to let the model decide. Mutually exclusive with the min/max values in Speaker Options.',
 					},
 					{
 						displayName: 'Speech Model',
@@ -730,8 +847,12 @@ export class AssemblyAi implements INodeType {
 						type: 'options',
 						default: 'universal',
 						options: [
-							{ name: 'Universal', value: 'universal' },
+							{ name: 'Best (Deprecated)', value: 'best' },
+							{ name: 'Nano (Deprecated)', value: 'nano' },
 							{ name: 'Slam-1', value: 'slam-1' },
+							{ name: 'Universal', value: 'universal' },
+							{ name: 'Universal-2', value: 'universal-2' },
+							{ name: 'Universal-3 Pro', value: 'universal-3-pro' },
 						],
 						description: 'The speech model to use for transcription',
 					},
@@ -1003,6 +1124,27 @@ export class AssemblyAi implements INodeType {
 				},
 				options: [
 					{
+						displayName: 'After ID',
+						name: 'after_id',
+						type: 'string',
+						default: '',
+						description: 'Get transcripts after this ID (for pagination)',
+					},
+					{
+						displayName: 'Before ID',
+						name: 'before_id',
+						type: 'string',
+						default: '',
+						description: 'Get transcripts before this ID (for pagination)',
+					},
+					{
+						displayName: 'Created On (After)',
+						name: 'created_on',
+						type: 'dateTime',
+						default: '',
+						description: 'Only get transcripts created after this date',
+					},
+					{
 						displayName: 'Status',
 						name: 'status',
 						type: 'options',
@@ -1017,25 +1159,11 @@ export class AssemblyAi implements INodeType {
 						description: 'Filter by transcript status',
 					},
 					{
-						displayName: 'Created On (After)',
-						name: 'created_on',
-						type: 'dateTime',
-						default: '',
-						description: 'Only get transcripts created after this date',
-					},
-					{
-						displayName: 'Before ID',
-						name: 'before_id',
-						type: 'string',
-						default: '',
-						description: 'Get transcripts before this ID (for pagination)',
-					},
-					{
-						displayName: 'After ID',
-						name: 'after_id',
-						type: 'string',
-						default: '',
-						description: 'Get transcripts after this ID (for pagination)',
+						displayName: 'Throttled Only',
+						name: 'throttled_only',
+						type: 'boolean',
+						default: false,
+						description: 'Whether to only return throttled transcripts. Overrides the status filter.',
 					},
 				],
 			},
@@ -1161,211 +1289,6 @@ export class AssemblyAi implements INodeType {
 						],
 					},
 				],
-			},
-			// LeMUR fields
-			{
-				displayName: 'Transcript IDs',
-				name: 'lemurTranscriptIds',
-				type: 'string',
-				default: '',
-				required: true,
-				displayOptions: {
-					show: {
-						resource: ['lemur'],
-						operation: ['summary', 'questionAnswer', 'task'],
-					},
-				},
-				description: 'Comma-separated list of transcript IDs to use',
-			},
-			{
-				displayName: 'LeMUR Request ID',
-				name: 'lemurRequestId',
-				type: 'string',
-				default: '',
-				required: true,
-				displayOptions: {
-					show: {
-						resource: ['lemur'],
-						operation: ['getResponse', 'purgeData'],
-					},
-				},
-				description: 'ID of the LeMUR request',
-			},
-			{
-				displayName: 'Context',
-				name: 'context',
-				type: 'string',
-				typeOptions: {
-					rows: 4,
-				},
-				default: '',
-				displayOptions: {
-					show: {
-						resource: ['lemur'],
-						operation: ['summary', 'questionAnswer'],
-					},
-				},
-				description: 'Additional context about the transcript',
-			},
-			{
-				displayName: 'Final Model',
-				name: 'final_model',
-				type: 'options',
-				required: true,
-				default: 'anthropic/claude-sonnet-4-20250514',
-				displayOptions: {
-					show: {
-						resource: ['lemur'],
-						operation: ['summary', 'questionAnswer', 'task'],
-					},
-				},
-				options: [
-					{ name: 'Claude 3 Haiku', value: 'anthropic/claude-3-haiku' },
-					{ name: 'Claude 3 Opus', value: 'anthropic/claude-3-opus' },
-					{ name: 'Claude 3.5 Haiku', value: 'anthropic/claude-3-5-haiku-20241022' },
-					{ name: 'Claude 4 Opus', value: 'anthropic/claude-opus-4-20250514' },
-					{ name: 'Claude 4 Sonnet', value: 'anthropic/claude-sonnet-4-20250514' },
-				],
-				description: 'LLM model to use for the task',
-			},
-			// LeMUR Q&A fields
-			{
-				displayName: 'Questions',
-				name: 'questions',
-				type: 'fixedCollection',
-				typeOptions: {
-					multipleValues: true,
-				},
-				displayOptions: {
-					show: {
-						resource: ['lemur'],
-						operation: ['questionAnswer'],
-					},
-				},
-				default: {},
-				options: [
-					{
-						name: 'question',
-						displayName: 'Question',
-						values: [
-							{
-								displayName: 'Question Text',
-								name: 'question',
-								type: 'string',
-								default: '',
-								description: 'The question you wish to ask',
-							},
-							{
-								displayName: 'Answer Type',
-								name: 'answerType',
-								type: 'options',
-								default: 'format',
-								options: [
-									{ name: 'Answer Format (Free Text)', value: 'format' },
-									{
-										name: 'Answer Options (Discrete Choices)',
-										value: 'options',
-									},
-								],
-								description: 'Choose whether to specify a format or provide discrete options',
-							},
-							{
-								displayName: 'Answer Format',
-								name: 'answer_format',
-								type: 'string',
-								default: '',
-								displayOptions: {
-									show: {
-										answerType: ['format'],
-									},
-								},
-								description:
-									"How you want the answer returned (e.g., 'short sentence', 'bullet points')",
-								placeholder: 'short sentence',
-							},
-							{
-								displayName: 'Answer Options',
-								name: 'answer_options',
-								type: 'fixedCollection',
-								typeOptions: {
-									multipleValues: true,
-								},
-								default: {},
-								displayOptions: {
-									show: {
-										answerType: ['options'],
-									},
-								},
-								description: 'Discrete options for the answer',
-								options: [
-									{
-										name: 'option',
-										displayName: 'Option',
-										values: [
-											{
-												displayName: 'Option Text',
-												name: 'value',
-												type: 'string',
-												default: '',
-												description: 'A possible answer option',
-												placeholder: 'Yes',
-											},
-										],
-									},
-								],
-							},
-						],
-					},
-				],
-			},
-			// LeMUR Custom Task fields
-			{
-				displayName: 'Prompt',
-				name: 'prompt',
-				type: 'string',
-				typeOptions: {
-					rows: 5,
-				},
-				default: '',
-				required: true,
-				displayOptions: {
-					show: {
-						resource: ['lemur'],
-						operation: ['task'],
-					},
-				},
-				description: 'Custom prompt for LeMUR to execute',
-			},
-			{
-				displayName: 'Temperature',
-				name: 'temperature',
-				type: 'number',
-				default: 0,
-				typeOptions: {
-					minValue: 0,
-					maxValue: 1,
-					numberStepSize: 0.1,
-				},
-				displayOptions: {
-					show: {
-						resource: ['lemur'],
-						operation: ['summary', 'questionAnswer', 'task'],
-					},
-				},
-				description: 'Temperature for response generation (0-1)',
-			},
-			{
-				displayName: 'Max Output Size',
-				name: 'max_output_size',
-				type: 'number',
-				default: 2000,
-				displayOptions: {
-					show: {
-						resource: ['lemur'],
-						operation: ['summary', 'questionAnswer', 'task'],
-					},
-				},
-				description: 'Maximum number of tokens in the response',
 			},
 			// LLM Gateway Operations
 			{
@@ -1728,7 +1651,6 @@ export class AssemblyAi implements INodeType {
 		const userAgent = `n8n-assemblyai-node/${AAI_NODE_VERSION}`;
 		const apiKey = credentials.apiKey as string;
 		const baseURL = 'https://api.assemblyai.com/v2';
-		const baseLemurURL = 'https://api.assemblyai.com/lemur/v3';
 
 		for (let i = 0; i < items.length; i++) {
 			try {
@@ -1782,6 +1704,7 @@ export class AssemblyAi implements INodeType {
 						// Extract and remove the collections and complex fields from additionalFields
 						const {
 							keyterms_prompt,
+							keyterms_prompt_options,
 							custom_spelling,
 							language_detection_options,
 							language_codes,
@@ -1799,11 +1722,37 @@ export class AssemblyAi implements INodeType {
 							...restAdditionalFields, // Spread without the collections
 						};
 
+						// Drop empty-string defaults from option-typed fields so the API uses its own defaults
+						if (body.domain === ('' as unknown as 'medical-v1')) {
+							delete body.domain;
+						}
+						if (body.remove_audio_tags === ('' as unknown as 'all')) {
+							delete body.remove_audio_tags;
+						}
+						// speakers_expected of 0 means "let the model decide"
+						if (body.speakers_expected === 0) {
+							delete body.speakers_expected;
+						}
+
 						// Handle keyterms_prompt
 						if (keyterms_prompt) {
 							const keytermsCollection = keyterms_prompt as IKeyTermsCollection;
 							const keytermsArray = keytermsCollection.term || [];
 							body.keyterms_prompt = keytermsArray.map((item) => item.value);
+						}
+
+						// Handle keyterms_prompt_options
+						if (keyterms_prompt_options) {
+							const options = (
+								keyterms_prompt_options as {
+									options?: { keyterms_match_strength?: 'high' | 'standard' };
+								}
+							).options;
+							if (options?.keyterms_match_strength) {
+								body.keyterms_prompt_options = {
+									keyterms_match_strength: options.keyterms_match_strength,
+								};
+							}
 						}
 
 						// Handle custom_spelling
@@ -1823,8 +1772,8 @@ export class AssemblyAi implements INodeType {
 									options?: {
 										expected_languages?: string;
 										fallback_language?: string;
-										code_switching?: boolean;
 										code_switching_confidence_threshold?: number;
+										on_low_language_confidence?: 'error' | 'fallback';
 									};
 								}
 							).options;
@@ -1838,15 +1787,16 @@ export class AssemblyAi implements INodeType {
 								if (options.fallback_language && body.language_detection_options) {
 									body.language_detection_options.fallback_language = options.fallback_language;
 								}
-								if (options.code_switching !== undefined && body.language_detection_options) {
-									body.language_detection_options.code_switching = options.code_switching;
-								}
 								if (
 									options.code_switching_confidence_threshold !== undefined &&
 									body.language_detection_options
 								) {
 									body.language_detection_options.code_switching_confidence_threshold =
 										options.code_switching_confidence_threshold;
+								}
+								if (options.on_low_language_confidence && body.language_detection_options) {
+									body.language_detection_options.on_low_language_confidence =
+										options.on_low_language_confidence;
 								}
 							}
 						}
@@ -1865,7 +1815,21 @@ export class AssemblyAi implements INodeType {
 						if (speaker_options) {
 							const options = (
 								speaker_options as {
-									options?: { min_speakers_expected?: number; max_speakers_expected?: number };
+									options?: {
+										min_speakers_expected?: number;
+										max_speakers_expected?: number;
+										use_two_stage_clustering?: boolean;
+										enforce_sentence_level_consistency?: boolean;
+										short_file_diarization_method?:
+											| 'conservative'
+											| 'balanced'
+											| 'aggressive'
+											| 'deliberate'
+											| '';
+										long_file_diarization_method?: 'standard' | 'experimental' | '';
+										speaker_labels_model?: 'standard' | 'experimental' | '';
+										advanced_speaker_segmentation?: boolean;
+									};
 								}
 							).options;
 							if (options) {
@@ -1876,6 +1840,36 @@ export class AssemblyAi implements INodeType {
 								if (options.max_speakers_expected !== undefined && body.speaker_options) {
 									body.speaker_options.max_speakers_expected = options.max_speakers_expected;
 								}
+								if (options.use_two_stage_clustering !== undefined && body.speaker_options) {
+									body.speaker_options.use_two_stage_clustering = options.use_two_stage_clustering;
+								}
+								if (
+									options.enforce_sentence_level_consistency !== undefined &&
+									body.speaker_options
+								) {
+									body.speaker_options.enforce_sentence_level_consistency =
+										options.enforce_sentence_level_consistency;
+								}
+								if (options.short_file_diarization_method && body.speaker_options) {
+									body.speaker_options.short_file_diarization_method =
+										options.short_file_diarization_method as
+											| 'conservative'
+											| 'balanced'
+											| 'aggressive'
+											| 'deliberate';
+								}
+								if (options.long_file_diarization_method && body.speaker_options) {
+									body.speaker_options.long_file_diarization_method =
+										options.long_file_diarization_method as 'standard' | 'experimental';
+								}
+								if (options.speaker_labels_model && body.speaker_options) {
+									body.speaker_options.speaker_labels_model =
+										options.speaker_labels_model as 'standard' | 'experimental';
+								}
+								if (options.advanced_speaker_segmentation !== undefined && body.speaker_options) {
+									body.speaker_options.advanced_speaker_segmentation =
+										options.advanced_speaker_segmentation;
+								}
 							}
 						}
 
@@ -1883,7 +1877,10 @@ export class AssemblyAi implements INodeType {
 						if (redact_pii_audio_options) {
 							const options = (
 								redact_pii_audio_options as {
-									options?: { return_redacted_no_speech_audio?: boolean };
+									options?: {
+										return_redacted_no_speech_audio?: boolean;
+										override_audio_redaction_method?: 'silence' | '';
+									};
 								}
 							).options;
 							if (options) {
@@ -1894,6 +1891,13 @@ export class AssemblyAi implements INodeType {
 								) {
 									body.redact_pii_audio_options.return_redacted_no_speech_audio =
 										options.return_redacted_no_speech_audio;
+								}
+								if (
+									options.override_audio_redaction_method &&
+									body.redact_pii_audio_options
+								) {
+									body.redact_pii_audio_options.override_audio_redaction_method =
+										options.override_audio_redaction_method as 'silence';
 								}
 							}
 						}
@@ -2044,6 +2048,9 @@ export class AssemblyAi implements INodeType {
 						if (listAdditionalFields.after_id) {
 							qs.after_id = listAdditionalFields.after_id;
 						}
+						if (listAdditionalFields.throttled_only) {
+							qs.throttled_only = listAdditionalFields.throttled_only;
+						}
 
 						responseData = await this.helpers.httpRequest({
 							method: 'GET',
@@ -2141,132 +2148,6 @@ export class AssemblyAi implements INodeType {
 							},
 							json: true,
 						});
-					}
-				} else if (resource === 'lemur') {
-					if (operation === 'getResponse') {
-						const requestId = this.getNodeParameter('lemurRequestId', i) as string;
-
-						responseData = await this.helpers.httpRequest({
-							method: 'GET',
-							url: `${baseLemurURL}/${requestId}`,
-							headers: {
-								Authorization: apiKey,
-								'User-Agent': userAgent,
-							},
-							json: true,
-						});
-					} else if (operation === 'purgeData') {
-						const requestId = this.getNodeParameter('lemurRequestId', i) as string;
-
-						responseData = await this.helpers.httpRequest({
-							method: 'DELETE',
-							url: `${baseLemurURL}/${requestId}`,
-							headers: {
-								Authorization: apiKey,
-								'User-Agent': userAgent,
-							},
-							json: true,
-						});
-					} else {
-						// All other LeMUR operations require transcript IDs
-						const transcriptIds = this.getNodeParameter('lemurTranscriptIds', i) as string;
-						const finalModel = this.getNodeParameter('final_model', i) as string;
-						const temperature = this.getNodeParameter('temperature', i) as number;
-						const maxOutputSize = this.getNodeParameter('max_output_size', i) as number;
-
-						const baseBody: ILemurBaseBody = {
-							transcript_ids: transcriptIds.split(',').map((id) => id.trim()),
-							final_model: finalModel,
-							temperature,
-							max_output_size: maxOutputSize,
-						};
-
-						// Only get context for operations that support it
-						if (['summary', 'questionAnswer'].includes(operation)) {
-							const context = this.getNodeParameter('context', i) as string;
-							if (context && context.trim()) {
-								baseBody.context = context;
-							}
-						}
-
-						if (operation === 'summary') {
-							responseData = await this.helpers.httpRequest({
-								method: 'POST',
-								url: `${baseLemurURL}/generate/summary`,
-								headers: {
-									Authorization: apiKey,
-									'Content-Type': 'application/json',
-									'User-Agent': userAgent,
-								},
-								body: JSON.stringify(baseBody),
-							});
-						} else if (operation === 'questionAnswer') {
-							const questionsCollection = this.getNodeParameter(
-								'questions',
-								i,
-							) as IQuestionsCollection;
-							const questionsArray = questionsCollection.question || [];
-
-							const processedQuestions = questionsArray.map(
-								(q: {
-									question: string;
-									answerType: string;
-									answer_format?: string;
-									answer_options?: {
-										option?: Array<{ value: string }>;
-									};
-								}) => {
-									const questionObj: Record<string, string | string[]> = {
-										question: q.question,
-									};
-
-									if (q.answerType === 'format' && q.answer_format) {
-										questionObj.answer_format = q.answer_format;
-									} else if (q.answerType === 'options' && q.answer_options) {
-										const optionsArray = q.answer_options.option || [];
-										questionObj.answer_options = optionsArray.map(
-											(opt: { value: string }) => opt.value,
-										);
-									}
-
-									return questionObj;
-								},
-							);
-
-							const body = {
-								...baseBody,
-								questions: processedQuestions,
-							};
-
-							responseData = await this.helpers.httpRequest({
-								method: 'POST',
-								url: `https://api.assemblyai.com/lemur/v3/generate/question-answer`,
-								headers: {
-									Authorization: apiKey,
-									'Content-Type': 'application/json',
-									'User-Agent': userAgent,
-								},
-								body: JSON.stringify(body),
-							});
-						} else if (operation === 'task') {
-							const prompt = this.getNodeParameter('prompt', i) as string;
-
-							const body = {
-								...baseBody,
-								prompt,
-							};
-
-							responseData = await this.helpers.httpRequest({
-								method: 'POST',
-								url: `${baseLemurURL}/generate/task`,
-								headers: {
-									Authorization: apiKey,
-									'Content-Type': 'application/json',
-									'User-Agent': userAgent,
-								},
-								body: JSON.stringify(body),
-							});
-						}
 					}
 				} else if (resource === 'llm_gateway') {
 					const llmGatewayURL = 'https://llm-gateway.assemblyai.com/v1';
