@@ -363,33 +363,6 @@ export class AssemblyAi implements INodeType {
 						],
 					},
 					{
-						displayName: 'Keyterms Prompt Options',
-						name: 'keyterms_prompt_options',
-						type: 'fixedCollection',
-						default: {},
-						description: 'Options applied to the keyterms prompt. Only takes effect when Key Terms are configured.',
-						options: [
-							{
-								name: 'options',
-								displayName: 'Options',
-								values: [
-									{
-										displayName: 'Match Strength',
-										name: 'keyterms_match_strength',
-										type: 'options',
-										default: '',
-										options: [
-											{ name: 'Default', value: '' },
-											{ name: 'High', value: 'high' },
-											{ name: 'Standard', value: 'standard' },
-										],
-										description: 'Match strength used by the keyterms prompt boost',
-									},
-								],
-							},
-						],
-					},
-					{
 						displayName: 'Language Code',
 						name: 'language_code',
 						type: 'options',
@@ -493,17 +466,6 @@ export class AssemblyAi implements INodeType {
 											numberStepSize: 0.1,
 										},
 										description: 'Confidence threshold for detecting code switching (0-1). For multi-language transcription, configure the top-level Language Codes field.',
-									},
-									{
-										displayName: 'On Low Language Confidence',
-										name: 'on_low_language_confidence',
-										type: 'options',
-										default: 'error',
-										options: [
-											{ name: 'Error', value: 'error' },
-											{ name: 'Fallback', value: 'fallback' },
-										],
-										description: 'Behavior when detected language confidence is below the threshold',
 									},
 								],
 							},
@@ -611,47 +573,32 @@ export class AssemblyAi implements INodeType {
 							{ name: 'Account Number', value: 'account_number' },
 							{ name: 'Banking Information', value: 'banking_information' },
 							{ name: 'Blood Type', value: 'blood_type' },
-							{ name: 'Corporate Action (Beta)', value: 'corporate_action' },
 							{ name: 'Credit Card CVV', value: 'credit_card_cvv' },
 							{ name: 'Credit Card Expiration', value: 'credit_card_expiration' },
 							{ name: 'Credit Card Number', value: 'credit_card_number' },
 							{ name: 'Date', value: 'date' },
 							{ name: 'Date Interval', value: 'date_interval' },
 							{ name: 'Date of Birth', value: 'date_of_birth' },
-							{ name: 'Day (Beta)', value: 'day' },
 							{ name: 'Drivers License', value: 'drivers_license' },
 							{ name: 'Drug', value: 'drug' },
 							{ name: 'Duration', value: 'duration' },
-							{ name: 'Effect (Beta)', value: 'effect' },
 							{ name: 'Email Address', value: 'email_address' },
 							{ name: 'Event', value: 'event' },
 							{ name: 'Filename', value: 'filename' },
-							{ name: 'Financial Metric (Beta)', value: 'financial_metric' },
 							{ name: 'Gender/Sexuality', value: 'gender_sexuality' },
 							{ name: 'Healthcare Number', value: 'healthcare_number' },
 							{ name: 'Injury', value: 'injury' },
 							{ name: 'IP Address', value: 'ip_address' },
 							{ name: 'Language', value: 'language' },
 							{ name: 'Location', value: 'location' },
-							{ name: 'Location Address', value: 'location_address' },
-							{ name: 'Location Address Street', value: 'location_address_street' },
-							{ name: 'Location City', value: 'location_city' },
-							{ name: 'Location Coordinate', value: 'location_coordinate' },
-							{ name: 'Location Country', value: 'location_country' },
-							{ name: 'Location State', value: 'location_state' },
-							{ name: 'Location Zip', value: 'location_zip' },
 							{ name: 'Marital Status', value: 'marital_status' },
-							{ name: 'Medical Code (Beta)', value: 'medical_code' },
 							{ name: 'Medical Condition', value: 'medical_condition' },
 							{ name: 'Medical Process', value: 'medical_process' },
 							{ name: 'Money Amount', value: 'money_amount' },
-							{ name: 'Month (Beta)', value: 'month' },
 							{ name: 'Nationality', value: 'nationality' },
 							{ name: 'Number Sequence', value: 'number_sequence' },
 							{ name: 'Occupation', value: 'occupation' },
 							{ name: 'Organization', value: 'organization' },
-							{ name: 'Organization ID (Beta)', value: 'organization_id' },
-							{ name: 'Organization Medical Facility', value: 'organization_medical_facility' },
 							{ name: 'Passport Number', value: 'passport_number' },
 							{ name: 'Password', value: 'password' },
 							{ name: 'Person Age', value: 'person_age' },
@@ -659,17 +606,13 @@ export class AssemblyAi implements INodeType {
 							{ name: 'Phone Number', value: 'phone_number' },
 							{ name: 'Physical Attribute', value: 'physical_attribute' },
 							{ name: 'Political Affiliation', value: 'political_affiliation' },
-							{ name: 'Product (Beta)', value: 'product' },
-							{ name: 'Project (Beta)', value: 'project' },
 							{ name: 'Religion', value: 'religion' },
 							{ name: 'Statistics', value: 'statistics' },
 							{ name: 'Time', value: 'time' },
-							{ name: 'Trend (Beta)', value: 'trend' },
 							{ name: 'URL', value: 'url' },
 							{ name: 'US Social Security Number', value: 'us_social_security_number' },
 							{ name: 'Username', value: 'username' },
 							{ name: 'Vehicle ID', value: 'vehicle_id' },
-							{ name: 'Year (Beta)', value: 'year' },
 							{ name: 'Zodiac Sign', value: 'zodiac_sign' },
 						],
 						displayOptions: {
@@ -749,79 +692,20 @@ export class AssemblyAi implements INodeType {
 								name: 'options',
 								displayName: 'Options',
 								values: [
-							{
-								displayName: 'Advanced Speaker Segmentation',
-								name: 'advanced_speaker_segmentation',
-								type: 'boolean',
-								default: false,
-								description: 'Whether to use advanced speaker segmentation for finer-grained turns',
-							},
-							{
-								displayName: 'Enforce Sentence-Level Consistency',
-								name: 'enforce_sentence_level_consistency',
-								type: 'boolean',
-								default: false,
-								description: 'Whether to enforce a single speaker label per sentence',
-							},
-							{
-								displayName: 'Long File Diarization Method',
-								name: 'long_file_diarization_method',
-								type: 'options',
-								default: '',
-								options: [
-									{ name: 'Default', value: '' },
-									{ name: 'Experimental', value: 'experimental' },
-									{ name: 'Standard', value: 'standard' },
-								],
-								description: 'Clustering strategy used for long audio files',
-							},
-							{
-								displayName: 'Maximum Speakers Expected',
-								name: 'max_speakers_expected',
-								type: 'number',
-								default: 10,
-								description: 'The maximum number of speakers expected. Setting this too high may hurt accuracy.',
-							},
-							{
-								displayName: 'Minimum Speakers Expected',
-								name: 'min_speakers_expected',
-								type: 'number',
-								default: 1,
-								description: 'The minimum number of speakers expected in the audio file',
-							},
-							{
-								displayName: 'Short File Diarization Method',
-								name: 'short_file_diarization_method',
-								type: 'options',
-								default: '',
-								options: [
-									{ name: 'Aggressive', value: 'aggressive' },
-									{ name: 'Balanced', value: 'balanced' },
-									{ name: 'Conservative', value: 'conservative' },
-									{ name: 'Default', value: '' },
-									{ name: 'Deliberate', value: 'deliberate' },
-								],
-								description: 'Clustering strategy used for short audio files',
-							},
-							{
-								displayName: 'Speaker Labels Model',
-								name: 'speaker_labels_model',
-								type: 'options',
-								default: '',
-								options: [
-									{ name: 'Default', value: '' },
-									{ name: 'Experimental', value: 'experimental' },
-									{ name: 'Standard', value: 'standard' },
-								],
-								description: 'Speaker labels model. The API maps this to the underlying short and long file diarization methods.',
-							},
-							{
-								displayName: 'Use Two-Stage Clustering',
-								name: 'use_two_stage_clustering',
-								type: 'boolean',
-								default: false,
-								description: 'Whether to enable two-stage speaker clustering for improved diarization accuracy',
-							},
+									{
+										displayName: 'Maximum Speakers Expected',
+										name: 'max_speakers_expected',
+										type: 'number',
+										default: 10,
+										description: 'The maximum number of speakers expected. Setting this too high may hurt accuracy.',
+									},
+									{
+										displayName: 'Minimum Speakers Expected',
+										name: 'min_speakers_expected',
+										type: 'number',
+										default: 1,
+										description: 'The minimum number of speakers expected in the audio file',
+									},
 								],
 							},
 						],
@@ -842,19 +726,20 @@ export class AssemblyAi implements INodeType {
 						description: 'Expected total number of speakers. Leave at 0 to let the model decide. Mutually exclusive with the min/max values in Speaker Options.',
 					},
 					{
-						displayName: 'Speech Model',
+						displayName: 'Speech Model (Legacy)',
 						name: 'speech_model',
 						type: 'options',
-						default: 'universal',
+						default: '',
 						options: [
 							{ name: 'Best (Deprecated)', value: 'best' },
+							{ name: 'Default (Let API Choose)', value: '' },
 							{ name: 'Nano (Deprecated)', value: 'nano' },
 							{ name: 'Slam-1', value: 'slam-1' },
 							{ name: 'Universal', value: 'universal' },
 							{ name: 'Universal-2', value: 'universal-2' },
 							{ name: 'Universal-3 Pro', value: 'universal-3-pro' },
 						],
-						description: 'The speech model to use for transcription',
+						description: 'Legacy single-model parameter. Prefer Speech Models (Priority Order) for new workflows. Cannot be combined with Speech Models.',
 					},
 					// Multiple Speech Models
 					{
@@ -863,8 +748,8 @@ export class AssemblyAi implements INodeType {
 						type: 'string',
 						default: '',
 						description:
-							'Comma-separated list of speech models in priority order for automatic routing',
-						placeholder: 'universal,slam-1',
+							'Recommended. Comma-separated list of speech models in priority order. The API routes per language and falls back through the list. Example: "universal-3-pro,universal-2".',
+						placeholder: 'universal-3-pro,universal-2',
 					},
 					{
 						displayName: 'Speech Threshold',
@@ -1006,14 +891,14 @@ export class AssemblyAi implements INodeType {
 						],
 					},
 					{
-						displayName: 'Summarization',
+						displayName: 'Summarization (Deprecated)',
 						name: 'summarization',
 						type: 'boolean',
 						default: false,
-						description: 'Whether to generate a summary of the transcript',
+						description: 'Whether to generate a summary of the transcript. Deprecated and will be removed in a later release. Use the LLM Gateway resource (Chat Completion) for summarization.',
 					},
 					{
-						displayName: 'Summary Model',
+						displayName: 'Summary Model (Deprecated)',
 						name: 'summary_model',
 						type: 'options',
 						default: 'informative',
@@ -1027,10 +912,10 @@ export class AssemblyAi implements INodeType {
 								summarization: [true],
 							},
 						},
-						description: 'Type of summary to generate',
+						description: 'Deprecated. Will be removed in a later release. Use the LLM Gateway resource (Chat Completion) for summarization.',
 					},
 					{
-						displayName: 'Summary Type',
+						displayName: 'Summary Type (Deprecated)',
 						name: 'summary_type',
 						type: 'options',
 						default: 'bullets',
@@ -1046,7 +931,7 @@ export class AssemblyAi implements INodeType {
 								summarization: [true],
 							},
 						},
-						description: 'Format of the summary',
+						description: 'Deprecated. Will be removed in a later release. Use the LLM Gateway resource (Chat Completion) for summarization.',
 					},
 					{
 						displayName: 'Webhook Auth Header',
@@ -1704,7 +1589,6 @@ export class AssemblyAi implements INodeType {
 						// Extract and remove the collections and complex fields from additionalFields
 						const {
 							keyterms_prompt,
-							keyterms_prompt_options,
 							custom_spelling,
 							language_detection_options,
 							language_codes,
@@ -1741,20 +1625,6 @@ export class AssemblyAi implements INodeType {
 							body.keyterms_prompt = keytermsArray.map((item) => item.value);
 						}
 
-						// Handle keyterms_prompt_options
-						if (keyterms_prompt_options) {
-							const options = (
-								keyterms_prompt_options as {
-									options?: { keyterms_match_strength?: 'high' | 'standard' };
-								}
-							).options;
-							if (options?.keyterms_match_strength) {
-								body.keyterms_prompt_options = {
-									keyterms_match_strength: options.keyterms_match_strength,
-								};
-							}
-						}
-
 						// Handle custom_spelling
 						if (custom_spelling) {
 							const customSpellingCollection = custom_spelling as ICustomSpellingCollection;
@@ -1773,7 +1643,6 @@ export class AssemblyAi implements INodeType {
 										expected_languages?: string;
 										fallback_language?: string;
 										code_switching_confidence_threshold?: number;
-										on_low_language_confidence?: 'error' | 'fallback';
 									};
 								}
 							).options;
@@ -1793,10 +1662,6 @@ export class AssemblyAi implements INodeType {
 								) {
 									body.language_detection_options.code_switching_confidence_threshold =
 										options.code_switching_confidence_threshold;
-								}
-								if (options.on_low_language_confidence && body.language_detection_options) {
-									body.language_detection_options.on_low_language_confidence =
-										options.on_low_language_confidence;
 								}
 							}
 						}
@@ -1818,17 +1683,6 @@ export class AssemblyAi implements INodeType {
 									options?: {
 										min_speakers_expected?: number;
 										max_speakers_expected?: number;
-										use_two_stage_clustering?: boolean;
-										enforce_sentence_level_consistency?: boolean;
-										short_file_diarization_method?:
-											| 'conservative'
-											| 'balanced'
-											| 'aggressive'
-											| 'deliberate'
-											| '';
-										long_file_diarization_method?: 'standard' | 'experimental' | '';
-										speaker_labels_model?: 'standard' | 'experimental' | '';
-										advanced_speaker_segmentation?: boolean;
 									};
 								}
 							).options;
@@ -1839,36 +1693,6 @@ export class AssemblyAi implements INodeType {
 								}
 								if (options.max_speakers_expected !== undefined && body.speaker_options) {
 									body.speaker_options.max_speakers_expected = options.max_speakers_expected;
-								}
-								if (options.use_two_stage_clustering !== undefined && body.speaker_options) {
-									body.speaker_options.use_two_stage_clustering = options.use_two_stage_clustering;
-								}
-								if (
-									options.enforce_sentence_level_consistency !== undefined &&
-									body.speaker_options
-								) {
-									body.speaker_options.enforce_sentence_level_consistency =
-										options.enforce_sentence_level_consistency;
-								}
-								if (options.short_file_diarization_method && body.speaker_options) {
-									body.speaker_options.short_file_diarization_method =
-										options.short_file_diarization_method as
-											| 'conservative'
-											| 'balanced'
-											| 'aggressive'
-											| 'deliberate';
-								}
-								if (options.long_file_diarization_method && body.speaker_options) {
-									body.speaker_options.long_file_diarization_method =
-										options.long_file_diarization_method as 'standard' | 'experimental';
-								}
-								if (options.speaker_labels_model && body.speaker_options) {
-									body.speaker_options.speaker_labels_model =
-										options.speaker_labels_model as 'standard' | 'experimental';
-								}
-								if (options.advanced_speaker_segmentation !== undefined && body.speaker_options) {
-									body.speaker_options.advanced_speaker_segmentation =
-										options.advanced_speaker_segmentation;
 								}
 							}
 						}

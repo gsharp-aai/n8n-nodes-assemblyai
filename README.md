@@ -62,17 +62,18 @@ Learn more about API keys in the [AssemblyAI documentation](https://www.assembly
 ### Transcript ([API Reference](https://www.assemblyai.com/docs/api-reference/transcripts/submit))
 
 - **Create**: Start a new transcription job with support for:
-  - **Speech models**: Universal, Universal-2, Universal-3 Pro, Slam-1
+  - **Speech models**: prefer `speech_models` (priority list, e.g. `universal-3-pro,universal-2`). Legacy `speech_model` field is still available for backwards compatibility.
   - **Prompting** (Universal-3 Pro): pass a `prompt` (up to 1500 words) to steer transcription style and accuracy
   - **Medical Mode**: set `domain` to `medical-v1` for specialised medical-terminology accuracy
   - **Remove Audio Tags** (Universal-3 Pro): strip inline annotations like `[laughter]`, `[music]`, and speaker cues
-  - **Language detection** with `expected_languages`, `fallback_language`, `code_switching_confidence_threshold`, `on_low_language_confidence`
+  - **Language detection** with `expected_languages`, `fallback_language`, `code_switching_confidence_threshold`
   - **Code-switching transcription** via the top-level `language_codes` field
-  - **Speaker diarization** with min/max speakers, `speakers_expected`, two-stage clustering, sentence-level consistency, short/long file methods, advanced segmentation
-  - **PII redaction** including expanded policy list, `redact_pii_return_unredacted`, and `override_audio_redaction_method` (silence)
-  - **Profanity filtering**, summarization, sentiment analysis, entity detection, content safety, IAB categories, auto-chapters
-  - **Keyterm prompting** with `keyterms_match_strength` (high / standard)
+  - **Speaker diarization** with `speakers_expected` and `speaker_options` (min/max speakers)
+  - **PII redaction** with `redact_pii_return_unredacted` and `override_audio_redaction_method` (silence)
+  - **Keyterm prompting** to boost recognition of domain-specific terminology
+  - **Profanity filtering**, sentiment analysis, entity detection, content safety, IAB categories, auto-chapters
   - **Speech Understanding** at create time: translation, speaker identification, custom formatting
+  - Summarization fields (`summarization`, `summary_model`, `summary_type`) are still available but **deprecated** — use the LLM Gateway resource instead.
 - **Get**: Retrieve a transcription by ID
 - **Delete**: Delete a transcription
 - **List**: List all your transcriptions, filtered by status, date, ID range, or `throttled_only`

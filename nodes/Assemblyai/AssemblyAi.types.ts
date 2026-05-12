@@ -10,7 +10,6 @@ export interface IAdditionalFields {
 			expected_languages?: string;
 			fallback_language?: string;
 			code_switching_confidence_threshold?: number;
-			on_low_language_confidence?: 'error' | 'fallback';
 		};
 	};
 	language_confidence_threshold?: number;
@@ -32,12 +31,6 @@ export interface IAdditionalFields {
 		options?: {
 			min_speakers_expected?: number;
 			max_speakers_expected?: number;
-			use_two_stage_clustering?: boolean;
-			enforce_sentence_level_consistency?: boolean;
-			short_file_diarization_method?: 'conservative' | 'balanced' | 'aggressive' | 'deliberate';
-			long_file_diarization_method?: 'standard' | 'experimental';
-			speaker_labels_model?: 'standard' | 'experimental';
-			advanced_speaker_segmentation?: boolean;
 		};
 	};
 
@@ -75,11 +68,6 @@ export interface IAdditionalFields {
 
 	// Custom vocabulary - using our defined types
 	keyterms_prompt?: IKeyTermsCollection;
-	keyterms_prompt_options?: {
-		options?: {
-			keyterms_match_strength?: 'high' | 'standard';
-		};
-	};
 	custom_spelling?: ICustomSpellingCollection;
 
 	// Speech Understanding
@@ -138,7 +126,6 @@ export interface ITranscriptCreateBody {
 		expected_languages?: string[];
 		fallback_language?: string;
 		code_switching_confidence_threshold?: number;
-		on_low_language_confidence?: 'error' | 'fallback';
 	};
 	language_confidence_threshold?: number;
 	punctuate?: boolean;
@@ -159,12 +146,6 @@ export interface ITranscriptCreateBody {
 	speaker_options?: {
 		min_speakers_expected?: number;
 		max_speakers_expected?: number;
-		use_two_stage_clustering?: boolean;
-		enforce_sentence_level_consistency?: boolean;
-		short_file_diarization_method?: 'conservative' | 'balanced' | 'aggressive' | 'deliberate';
-		long_file_diarization_method?: 'standard' | 'experimental';
-		speaker_labels_model?: 'standard' | 'experimental';
-		advanced_speaker_segmentation?: boolean;
 	};
 
 	// Audio intelligence features
@@ -199,9 +180,6 @@ export interface ITranscriptCreateBody {
 
 	// Custom vocabulary (processed format for API)
 	keyterms_prompt?: string[];
-	keyterms_prompt_options?: {
-		keyterms_match_strength?: 'high' | 'standard';
-	};
 	custom_spelling?: Array<{
 		from: string[];
 		to: string;
