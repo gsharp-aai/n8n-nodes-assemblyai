@@ -85,7 +85,10 @@ Learn more about API keys in the [AssemblyAI documentation](https://www.assembly
 
 ### LLM Gateway ([API Reference](https://www.assemblyai.com/docs/api-reference/llm-gateway/create-chat-completion))
 
-- **Chat Completion**: Send chat completion requests to LLMs (Claude, GPT, Gemini models). See [available models](https://www.assemblyai.com/docs/llm-gateway/overview#available-models).
+- **Chat Completion**: Send chat completion requests to LLMs (Claude, GPT, Gemini, Qwen, Kimi). See [available models](https://www.assemblyai.com/docs/llm-gateway/overview#available-models). Supports:
+  - **Transcript injection**: pass `transcript_id` to substitute `{{ transcript }}` in your prompt with the transcript's text
+  - **Tool calling**: provide a JSON `tools` array; force a specific function via `Tool Choice: Specific Function` and a function name; multi-turn round-trips via the `Tool` message role + `tool_call_id`
+  - **JSON repair post-processing**: opt-in toggle that sends `post_processing_steps: [{ type: "json-repair" }]` to fix malformed JSON in tool-call arguments or structured outputs
 - **Speech Understanding**: Process speech understanding tasks on existing transcripts:
   - **Translation**: Translate transcripts into multiple languages
   - **Speaker Identification**: Identify speakers by name or role
