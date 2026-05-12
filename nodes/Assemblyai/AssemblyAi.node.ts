@@ -1256,6 +1256,20 @@ export class AssemblyAi implements INodeType {
 				placeholder: 'Write a haiku about coding',
 			},
 			{
+				displayName: 'Transcript ID',
+				name: 'chatTranscriptId',
+				type: 'string',
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['llm_gateway'],
+						operation: ['chatCompletion'],
+					},
+				},
+				description: 'Optional. AssemblyAI transcript ID. The first occurrence of the literal tag {{ transcript }} in the first message that contains it (or in the Prompt) is replaced with the transcript text before the completion runs.',
+				placeholder: 'YOUR_TRANSCRIPT_ID',
+			},
+			{
 				displayName: 'Messages',
 				name: 'messages',
 				type: 'fixedCollection',
@@ -1281,11 +1295,12 @@ export class AssemblyAi implements INodeType {
 								type: 'options',
 								default: 'user',
 								options: [
-									{ name: 'System', value: 'system' },
-									{ name: 'User', value: 'user' },
 									{ name: 'Assistant', value: 'assistant' },
+									{ name: 'System', value: 'system' },
+									{ name: 'Tool', value: 'tool' },
+									{ name: 'User', value: 'user' },
 								],
-								description: 'Role of the message sender',
+								description: 'Role of the message sender. Use "Tool" to return a tool/function call result back to the model.',
 							},
 							{
 								displayName: 'Content',
@@ -1295,8 +1310,21 @@ export class AssemblyAi implements INodeType {
 									rows: 4,
 								},
 								default: '',
-								description: 'Message content',
+								description: 'Message content. For role "Tool", this is the JSON-serialized result of the tool call.',
 								placeholder: 'Enter message content...',
+							},
+							{
+								displayName: 'Tool Call ID',
+								name: 'tool_call_id',
+								type: 'string',
+								default: '',
+								displayOptions: {
+									show: {
+										role: ['tool'],
+									},
+								},
+								description: 'Required when Role is "Tool". The ID of the tool call this message is responding to (returned by the model in a prior tool_calls response).',
+								placeholder: 'call_abc123',
 							},
 						],
 					},
@@ -1315,6 +1343,14 @@ export class AssemblyAi implements INodeType {
 					},
 				},
 				options: [
+					{
+						displayName: 'JSON Repair Post-Processing',
+						name: 'json_repair',
+						type: 'boolean',
+						default: false,
+						// When more post_processing_steps types are added by the API, convert this to a multiOptions dropdown.
+						description: 'Whether to apply JSON repair post-processing. Useful for fixing malformed JSON in tool-call arguments or structured outputs.',
+					},
 					{
 						displayName: 'Max Tokens',
 						name: 'max_tokens',
@@ -1342,8 +1378,22 @@ export class AssemblyAi implements INodeType {
 						options: [
 							{ name: 'Auto', value: 'auto', description: 'Let the model decide which tool to call' },
 							{ name: 'None', value: 'none', description: 'Force the model to not call any tools' },
+							{ name: 'Specific Function', value: 'function', description: 'Force the model to call the function named in Tool Choice Function Name' },
 						],
-						description: 'Controls which (if any) tool is called by the model. Use "auto" to let the model decide, or "none" to prevent tool calls.',
+						description: 'Controls which (if any) tool is called by the model',
+					},
+					{
+						displayName: 'Tool Choice Function Name',
+						name: 'tool_choice_function_name',
+						type: 'string',
+						default: '',
+						displayOptions: {
+							show: {
+								tool_choice: ['function'],
+							},
+						},
+						description: 'Name of the function the model must call. Must match a function name in the Tools array.',
+						placeholder: 'get_weather',
 					},
 					{
 						displayName: 'Tools',
@@ -1982,12 +2032,14 @@ export class AssemblyAi implements INodeType {
 
 						const body: {
 							model: string;
-							messages?: Array<{ role: string; content: string }>;
+							messages?: Array<{ role: string; content: string; tool_call_id?: string }>;
 							prompt?: string;
 							temperature?: number;
 							max_tokens?: number;
 							tools?: unknown[];
 							tool_choice?: string | Record<string, unknown>;
+							transcript_id?: string;
+							post_processing_steps?: Array<{ type: string }>;
 						} = {
 							model,
 						};
@@ -1998,16 +2050,28 @@ export class AssemblyAi implements INodeType {
 							body.prompt = promptValue;
 						}
 
+						// Add transcript_id if provided
+						const chatTranscriptId = this.getNodeParameter('chatTranscriptId', i, '') as string;
+						if (chatTranscriptId) {
+							body.transcript_id = chatTranscriptId;
+						}
+
 						// Add messages if provided
 						const messagesCollection = this.getNodeParameter('messages', i);
-						const msgCollection = messagesCollection as { message?: Array<{ role: string; content: string }> };
+						const msgCollection = messagesCollection as {
+							message?: Array<{ role: string; content: string; tool_call_id?: string }>;
+						};
 						if (msgCollection.message && Array.isArray(msgCollection.message) && msgCollection.message.length > 0) {
-							const messages: Array<{ role: string; content: string }> = [];
+							const messages: Array<{ role: string; content: string; tool_call_id?: string }> = [];
 							for (const msg of msgCollection.message) {
-								messages.push({
+								const built: { role: string; content: string; tool_call_id?: string } = {
 									role: msg.role,
 									content: msg.content,
-								});
+								};
+								if (msg.role === 'tool' && msg.tool_call_id) {
+									built.tool_call_id = msg.tool_call_id;
+								}
+								messages.push(built);
 							}
 							body.messages = messages;
 						}
@@ -2018,6 +2082,8 @@ export class AssemblyAi implements INodeType {
 							max_tokens?: number;
 							tools?: string;
 							tool_choice?: string;
+							tool_choice_function_name?: string;
+							json_repair?: boolean;
 						};
 						if (llmOptions.temperature !== undefined) {
 							body.temperature = llmOptions.temperature;
@@ -2037,7 +2103,24 @@ export class AssemblyAi implements INodeType {
 							}
 						}
 						if (llmOptions.tool_choice !== undefined) {
-							body.tool_choice = llmOptions.tool_choice;
+							if (llmOptions.tool_choice === 'function') {
+								if (!llmOptions.tool_choice_function_name) {
+									throw new NodeOperationError(
+										this.getNode(),
+										'Tool Choice Function Name is required when Tool Choice is "Specific Function"',
+										{ itemIndex: i },
+									);
+								}
+								body.tool_choice = {
+									type: 'function',
+									function: { name: llmOptions.tool_choice_function_name },
+								};
+							} else {
+								body.tool_choice = llmOptions.tool_choice;
+							}
+						}
+						if (llmOptions.json_repair) {
+							body.post_processing_steps = [{ type: 'json-repair' }];
 						}
 
 						responseData = await this.helpers.httpRequest({
