@@ -11,10 +11,8 @@ import {
 	IKeyTermsCollection,
 	ICustomSpellingCollection,
 	IWordsCollection,
-	IQuestionsCollection,
 	IQueryParams,
 	ITranscriptCreateBody,
-	ILemurBaseBody,
 	IListAdditionalFields,
 } from './AssemblyAi.types';
 
@@ -55,11 +53,6 @@ export class AssemblyAi implements INodeType {
 					{
 						name: 'File',
 						value: 'file',
-					},
-					{
-						name: 'LeMUR (Deprecated)',
-						value: 'lemur',
-						description: 'LeMUR is deprecated. Please use LLM Gateway instead.',
 					},
 					{
 						name: 'LLM Gateway',
@@ -161,53 +154,6 @@ export class AssemblyAi implements INodeType {
 					},
 				],
 				default: 'create',
-			},
-			// LeMUR Operations
-			{
-				displayName: 'Operation',
-				name: 'operation',
-				type: 'options',
-				noDataExpression: true,
-				displayOptions: {
-					show: {
-						resource: ['lemur'],
-					},
-				},
-				options: [
-					{
-						name: 'Custom Task',
-						value: 'task',
-						description: 'Run a custom LeMUR task',
-						action: 'Run custom task',
-					},
-					{
-						name: 'Get Response',
-						value: 'getResponse',
-						description: 'Get a LeMUR response by ID',
-						// eslint-disable-next-line n8n-nodes-base/node-param-operation-option-action-miscased
-						action: 'Get LeMUR response',
-					},
-					{
-						name: 'Purge Data',
-						value: 'purgeData',
-						description: 'Delete LeMUR request data',
-						// eslint-disable-next-line n8n-nodes-base/node-param-operation-option-action-miscased
-						action: 'Purge LeMUR data',
-					},
-					{
-						name: 'Question & Answer',
-						value: 'questionAnswer',
-						description: 'Ask questions about your transcript',
-						action: 'Question and answer',
-					},
-					{
-						name: 'Summary',
-						value: 'summary',
-						description: 'Generate a summary using LeMUR',
-						action: 'Generate summary',
-					},
-				],
-				default: 'summary',
 			},
 			// File Upload fields
 			{
@@ -341,6 +287,17 @@ export class AssemblyAi implements INodeType {
 						type: 'boolean',
 						default: false,
 						description: "Whether to transcribe filler words like 'umm'",
+					},
+					{
+						displayName: 'Domain',
+						name: 'domain',
+						type: 'options',
+						default: '',
+						options: [
+							{ name: 'None', value: '' },
+							{ name: 'Medical (Medical-V1)', value: 'medical-v1' },
+						],
+						description: 'Domain-specific transcription mode. Supported with Universal-2 and Universal-3 Pro.',
 					},
 					{
 						displayName: 'Dual Channel',
@@ -499,13 +456,6 @@ export class AssemblyAi implements INodeType {
 											'Language to use if detected language is not in expected list. Use "auto" to let the model choose.',
 									},
 									{
-										displayName: 'Enable Code Switching',
-										name: 'code_switching',
-										type: 'boolean',
-										default: false,
-										description: 'Whether to detect when the speaker switches between languages',
-									},
-									{
 										displayName: 'Code Switching Confidence Threshold',
 										name: 'code_switching_confidence_threshold',
 										type: 'number',
@@ -515,12 +465,7 @@ export class AssemblyAi implements INodeType {
 											maxValue: 1,
 											numberStepSize: 0.1,
 										},
-										displayOptions: {
-											show: {
-												code_switching: [true],
-											},
-										},
-										description: 'Confidence threshold for detecting code switching (0-1)',
+										description: 'Confidence threshold for detecting code switching (0-1). For multi-language transcription, configure the top-level Language Codes field.',
 									},
 								],
 							},
@@ -532,6 +477,16 @@ export class AssemblyAi implements INodeType {
 						type: 'boolean',
 						default: false,
 						description: 'Whether to enable multichannel transcription',
+					},
+					{
+						displayName: 'Prompt',
+						name: 'prompt',
+						type: 'string',
+						typeOptions: {
+							rows: 4,
+						},
+						default: '',
+						description: 'Context prompt used to steer transcription style and accuracy. Supported on Universal-3 Pro. Max 1500 words. Mutually exclusive with Key Terms.',
 					},
 					{
 						displayName: 'Punctuate',
@@ -577,6 +532,17 @@ export class AssemblyAi implements INodeType {
 										default: false,
 										description:
 											'Whether to receive redacted audio URLs even for silent audio files without dialogue',
+									},
+									{
+										displayName: 'Override Audio Redaction Method',
+										name: 'override_audio_redaction_method',
+										type: 'options',
+										default: '',
+										options: [
+											{ name: 'Default (Beep)', value: '' },
+											{ name: 'Silence', value: 'silence' },
+										],
+										description: 'Method used to redact PII in the audio. Set to Silence to replace PII with silence instead of the default beep.',
 									},
 								],
 							},
@@ -644,8 +610,6 @@ export class AssemblyAi implements INodeType {
 							{ name: 'Statistics', value: 'statistics' },
 							{ name: 'Time', value: 'time' },
 							{ name: 'URL', value: 'url' },
-							{ name: 'US Driver License', value: 'us_driver_license' },
-							{ name: 'US Healthcare Number', value: 'us_healthcare_number' },
 							{ name: 'US Social Security Number', value: 'us_social_security_number' },
 							{ name: 'Username', value: 'username' },
 							{ name: 'Vehicle ID', value: 'vehicle_id' },
@@ -657,6 +621,18 @@ export class AssemblyAi implements INodeType {
 							},
 						},
 						description: 'Types of PII to redact',
+					},
+					{
+						displayName: 'Redact PII Return Unredacted',
+						name: 'redact_pii_return_unredacted',
+						type: 'boolean',
+						default: false,
+						displayOptions: {
+							show: {
+								redact_pii: [true],
+							},
+						},
+						description: 'Whether to also return the unredacted transcript alongside the redacted one',
 					},
 					{
 						displayName: 'Redact PII Substitution',
@@ -673,6 +649,17 @@ export class AssemblyAi implements INodeType {
 							},
 						},
 						description: 'How to replace redacted PII in transcript',
+					},
+					{
+						displayName: 'Remove Audio Tags',
+						name: 'remove_audio_tags',
+						type: 'options',
+						default: '',
+						options: [
+							{ name: 'None', value: '' },
+							{ name: 'All', value: 'all' },
+						],
+						description: 'Strip inline audio tags like [laughter], [music], and speaker cues from the transcript output. Universal-3 Pro only.',
 					},
 					{
 						displayName: 'Sentiment Analysis',
@@ -706,34 +693,53 @@ export class AssemblyAi implements INodeType {
 								displayName: 'Options',
 								values: [
 									{
+										displayName: 'Maximum Speakers Expected',
+										name: 'max_speakers_expected',
+										type: 'number',
+										default: 10,
+										description: 'The maximum number of speakers expected. Setting this too high may hurt accuracy.',
+									},
+									{
 										displayName: 'Minimum Speakers Expected',
 										name: 'min_speakers_expected',
 										type: 'number',
 										default: 1,
 										description: 'The minimum number of speakers expected in the audio file',
 									},
-									{
-										displayName: 'Maximum Speakers Expected',
-										name: 'max_speakers_expected',
-										type: 'number',
-										default: 10,
-										description:
-											'The maximum number of speakers expected. Setting this too high may hurt accuracy.',
-									},
 								],
 							},
 						],
 					},
 					{
-						displayName: 'Speech Model',
+						displayName: 'Speakers Expected',
+						name: 'speakers_expected',
+						type: 'number',
+						default: 0,
+						typeOptions: {
+							minValue: 0,
+						},
+						displayOptions: {
+							show: {
+								speaker_labels: [true],
+							},
+						},
+						description: 'Expected total number of speakers. Leave at 0 to let the model decide. Mutually exclusive with the min/max values in Speaker Options.',
+					},
+					{
+						displayName: 'Speech Model (Legacy)',
 						name: 'speech_model',
 						type: 'options',
-						default: 'universal',
+						default: '',
 						options: [
-							{ name: 'Universal', value: 'universal' },
+							{ name: 'Best (Deprecated)', value: 'best' },
+							{ name: 'Default (Let API Choose)', value: '' },
+							{ name: 'Nano (Deprecated)', value: 'nano' },
 							{ name: 'Slam-1', value: 'slam-1' },
+							{ name: 'Universal', value: 'universal' },
+							{ name: 'Universal-2', value: 'universal-2' },
+							{ name: 'Universal-3 Pro', value: 'universal-3-pro' },
 						],
-						description: 'The speech model to use for transcription',
+						description: 'Legacy single-model parameter. Prefer Speech Models (Priority Order) for new workflows. Cannot be combined with Speech Models.',
 					},
 					// Multiple Speech Models
 					{
@@ -742,8 +748,8 @@ export class AssemblyAi implements INodeType {
 						type: 'string',
 						default: '',
 						description:
-							'Comma-separated list of speech models in priority order for automatic routing',
-						placeholder: 'universal,slam-1',
+							'Recommended. Comma-separated list of speech models in priority order. The API routes per language and falls back through the list. Example: "universal-3-pro,universal-2".',
+						placeholder: 'universal-3-pro,universal-2',
 					},
 					{
 						displayName: 'Speech Threshold',
@@ -885,14 +891,14 @@ export class AssemblyAi implements INodeType {
 						],
 					},
 					{
-						displayName: 'Summarization',
+						displayName: 'Summarization (Deprecated)',
 						name: 'summarization',
 						type: 'boolean',
 						default: false,
-						description: 'Whether to generate a summary of the transcript',
+						description: 'Whether to generate a summary of the transcript. Deprecated and will be removed in a later release. Use the LLM Gateway resource (Chat Completion) for summarization.',
 					},
 					{
-						displayName: 'Summary Model',
+						displayName: 'Summary Model (Deprecated)',
 						name: 'summary_model',
 						type: 'options',
 						default: 'informative',
@@ -906,10 +912,10 @@ export class AssemblyAi implements INodeType {
 								summarization: [true],
 							},
 						},
-						description: 'Type of summary to generate',
+						description: 'Deprecated. Will be removed in a later release. Use the LLM Gateway resource (Chat Completion) for summarization.',
 					},
 					{
-						displayName: 'Summary Type',
+						displayName: 'Summary Type (Deprecated)',
 						name: 'summary_type',
 						type: 'options',
 						default: 'bullets',
@@ -925,7 +931,7 @@ export class AssemblyAi implements INodeType {
 								summarization: [true],
 							},
 						},
-						description: 'Format of the summary',
+						description: 'Deprecated. Will be removed in a later release. Use the LLM Gateway resource (Chat Completion) for summarization.',
 					},
 					{
 						displayName: 'Webhook Auth Header',
@@ -1003,6 +1009,27 @@ export class AssemblyAi implements INodeType {
 				},
 				options: [
 					{
+						displayName: 'After ID',
+						name: 'after_id',
+						type: 'string',
+						default: '',
+						description: 'Get transcripts after this ID (for pagination)',
+					},
+					{
+						displayName: 'Before ID',
+						name: 'before_id',
+						type: 'string',
+						default: '',
+						description: 'Get transcripts before this ID (for pagination)',
+					},
+					{
+						displayName: 'Created On (After)',
+						name: 'created_on',
+						type: 'dateTime',
+						default: '',
+						description: 'Only get transcripts created after this date',
+					},
+					{
 						displayName: 'Status',
 						name: 'status',
 						type: 'options',
@@ -1017,25 +1044,11 @@ export class AssemblyAi implements INodeType {
 						description: 'Filter by transcript status',
 					},
 					{
-						displayName: 'Created On (After)',
-						name: 'created_on',
-						type: 'dateTime',
-						default: '',
-						description: 'Only get transcripts created after this date',
-					},
-					{
-						displayName: 'Before ID',
-						name: 'before_id',
-						type: 'string',
-						default: '',
-						description: 'Get transcripts before this ID (for pagination)',
-					},
-					{
-						displayName: 'After ID',
-						name: 'after_id',
-						type: 'string',
-						default: '',
-						description: 'Get transcripts after this ID (for pagination)',
+						displayName: 'Throttled Only',
+						name: 'throttled_only',
+						type: 'boolean',
+						default: false,
+						description: 'Whether to only return throttled transcripts. Overrides the status filter.',
 					},
 				],
 			},
@@ -1162,211 +1175,6 @@ export class AssemblyAi implements INodeType {
 					},
 				],
 			},
-			// LeMUR fields
-			{
-				displayName: 'Transcript IDs',
-				name: 'lemurTranscriptIds',
-				type: 'string',
-				default: '',
-				required: true,
-				displayOptions: {
-					show: {
-						resource: ['lemur'],
-						operation: ['summary', 'questionAnswer', 'task'],
-					},
-				},
-				description: 'Comma-separated list of transcript IDs to use',
-			},
-			{
-				displayName: 'LeMUR Request ID',
-				name: 'lemurRequestId',
-				type: 'string',
-				default: '',
-				required: true,
-				displayOptions: {
-					show: {
-						resource: ['lemur'],
-						operation: ['getResponse', 'purgeData'],
-					},
-				},
-				description: 'ID of the LeMUR request',
-			},
-			{
-				displayName: 'Context',
-				name: 'context',
-				type: 'string',
-				typeOptions: {
-					rows: 4,
-				},
-				default: '',
-				displayOptions: {
-					show: {
-						resource: ['lemur'],
-						operation: ['summary', 'questionAnswer'],
-					},
-				},
-				description: 'Additional context about the transcript',
-			},
-			{
-				displayName: 'Final Model',
-				name: 'final_model',
-				type: 'options',
-				required: true,
-				default: 'anthropic/claude-sonnet-4-20250514',
-				displayOptions: {
-					show: {
-						resource: ['lemur'],
-						operation: ['summary', 'questionAnswer', 'task'],
-					},
-				},
-				options: [
-					{ name: 'Claude 3 Haiku', value: 'anthropic/claude-3-haiku' },
-					{ name: 'Claude 3 Opus', value: 'anthropic/claude-3-opus' },
-					{ name: 'Claude 3.5 Haiku', value: 'anthropic/claude-3-5-haiku-20241022' },
-					{ name: 'Claude 4 Opus', value: 'anthropic/claude-opus-4-20250514' },
-					{ name: 'Claude 4 Sonnet', value: 'anthropic/claude-sonnet-4-20250514' },
-				],
-				description: 'LLM model to use for the task',
-			},
-			// LeMUR Q&A fields
-			{
-				displayName: 'Questions',
-				name: 'questions',
-				type: 'fixedCollection',
-				typeOptions: {
-					multipleValues: true,
-				},
-				displayOptions: {
-					show: {
-						resource: ['lemur'],
-						operation: ['questionAnswer'],
-					},
-				},
-				default: {},
-				options: [
-					{
-						name: 'question',
-						displayName: 'Question',
-						values: [
-							{
-								displayName: 'Question Text',
-								name: 'question',
-								type: 'string',
-								default: '',
-								description: 'The question you wish to ask',
-							},
-							{
-								displayName: 'Answer Type',
-								name: 'answerType',
-								type: 'options',
-								default: 'format',
-								options: [
-									{ name: 'Answer Format (Free Text)', value: 'format' },
-									{
-										name: 'Answer Options (Discrete Choices)',
-										value: 'options',
-									},
-								],
-								description: 'Choose whether to specify a format or provide discrete options',
-							},
-							{
-								displayName: 'Answer Format',
-								name: 'answer_format',
-								type: 'string',
-								default: '',
-								displayOptions: {
-									show: {
-										answerType: ['format'],
-									},
-								},
-								description:
-									"How you want the answer returned (e.g., 'short sentence', 'bullet points')",
-								placeholder: 'short sentence',
-							},
-							{
-								displayName: 'Answer Options',
-								name: 'answer_options',
-								type: 'fixedCollection',
-								typeOptions: {
-									multipleValues: true,
-								},
-								default: {},
-								displayOptions: {
-									show: {
-										answerType: ['options'],
-									},
-								},
-								description: 'Discrete options for the answer',
-								options: [
-									{
-										name: 'option',
-										displayName: 'Option',
-										values: [
-											{
-												displayName: 'Option Text',
-												name: 'value',
-												type: 'string',
-												default: '',
-												description: 'A possible answer option',
-												placeholder: 'Yes',
-											},
-										],
-									},
-								],
-							},
-						],
-					},
-				],
-			},
-			// LeMUR Custom Task fields
-			{
-				displayName: 'Prompt',
-				name: 'prompt',
-				type: 'string',
-				typeOptions: {
-					rows: 5,
-				},
-				default: '',
-				required: true,
-				displayOptions: {
-					show: {
-						resource: ['lemur'],
-						operation: ['task'],
-					},
-				},
-				description: 'Custom prompt for LeMUR to execute',
-			},
-			{
-				displayName: 'Temperature',
-				name: 'temperature',
-				type: 'number',
-				default: 0,
-				typeOptions: {
-					minValue: 0,
-					maxValue: 1,
-					numberStepSize: 0.1,
-				},
-				displayOptions: {
-					show: {
-						resource: ['lemur'],
-						operation: ['summary', 'questionAnswer', 'task'],
-					},
-				},
-				description: 'Temperature for response generation (0-1)',
-			},
-			{
-				displayName: 'Max Output Size',
-				name: 'max_output_size',
-				type: 'number',
-				default: 2000,
-				displayOptions: {
-					show: {
-						resource: ['lemur'],
-						operation: ['summary', 'questionAnswer', 'task'],
-					},
-				},
-				description: 'Maximum number of tokens in the response',
-			},
 			// LLM Gateway Operations
 			{
 				displayName: 'Operation',
@@ -1448,6 +1256,20 @@ export class AssemblyAi implements INodeType {
 				placeholder: 'Write a haiku about coding',
 			},
 			{
+				displayName: 'Transcript ID',
+				name: 'chatTranscriptId',
+				type: 'string',
+				default: '',
+				displayOptions: {
+					show: {
+						resource: ['llm_gateway'],
+						operation: ['chatCompletion'],
+					},
+				},
+				description: 'Optional. AssemblyAI transcript ID. The first occurrence of the literal tag {{ transcript }} in the first message that contains it (or in the Prompt) is replaced with the transcript text before the completion runs.',
+				placeholder: 'YOUR_TRANSCRIPT_ID',
+			},
+			{
 				displayName: 'Messages',
 				name: 'messages',
 				type: 'fixedCollection',
@@ -1473,11 +1295,12 @@ export class AssemblyAi implements INodeType {
 								type: 'options',
 								default: 'user',
 								options: [
-									{ name: 'System', value: 'system' },
-									{ name: 'User', value: 'user' },
 									{ name: 'Assistant', value: 'assistant' },
+									{ name: 'System', value: 'system' },
+									{ name: 'Tool', value: 'tool' },
+									{ name: 'User', value: 'user' },
 								],
-								description: 'Role of the message sender',
+								description: 'Role of the message sender. Use "Tool" to return a tool/function call result back to the model.',
 							},
 							{
 								displayName: 'Content',
@@ -1487,8 +1310,21 @@ export class AssemblyAi implements INodeType {
 									rows: 4,
 								},
 								default: '',
-								description: 'Message content',
+								description: 'Message content. For role "Tool", this is the JSON-serialized result of the tool call.',
 								placeholder: 'Enter message content...',
+							},
+							{
+								displayName: 'Tool Call ID',
+								name: 'tool_call_id',
+								type: 'string',
+								default: '',
+								displayOptions: {
+									show: {
+										role: ['tool'],
+									},
+								},
+								description: 'Required when Role is "Tool". The ID of the tool call this message is responding to (returned by the model in a prior tool_calls response).',
+								placeholder: 'call_abc123',
 							},
 						],
 					},
@@ -1507,6 +1343,14 @@ export class AssemblyAi implements INodeType {
 					},
 				},
 				options: [
+					{
+						displayName: 'JSON Repair Post-Processing',
+						name: 'json_repair',
+						type: 'boolean',
+						default: false,
+						// When more post_processing_steps types are added by the API, convert this to a multiOptions dropdown.
+						description: 'Whether to apply JSON repair post-processing. Useful for fixing malformed JSON in tool-call arguments or structured outputs.',
+					},
 					{
 						displayName: 'Max Tokens',
 						name: 'max_tokens',
@@ -1534,8 +1378,22 @@ export class AssemblyAi implements INodeType {
 						options: [
 							{ name: 'Auto', value: 'auto', description: 'Let the model decide which tool to call' },
 							{ name: 'None', value: 'none', description: 'Force the model to not call any tools' },
+							{ name: 'Specific Function', value: 'function', description: 'Force the model to call the function named in Tool Choice Function Name' },
 						],
-						description: 'Controls which (if any) tool is called by the model. Use "auto" to let the model decide, or "none" to prevent tool calls.',
+						description: 'Controls which (if any) tool is called by the model',
+					},
+					{
+						displayName: 'Tool Choice Function Name',
+						name: 'tool_choice_function_name',
+						type: 'string',
+						default: '',
+						displayOptions: {
+							show: {
+								tool_choice: ['function'],
+							},
+						},
+						description: 'Name of the function the model must call. Must match a function name in the Tools array.',
+						placeholder: 'get_weather',
 					},
 					{
 						displayName: 'Tools',
@@ -1728,7 +1586,6 @@ export class AssemblyAi implements INodeType {
 		const userAgent = `n8n-assemblyai-node/${AAI_NODE_VERSION}`;
 		const apiKey = credentials.apiKey as string;
 		const baseURL = 'https://api.assemblyai.com/v2';
-		const baseLemurURL = 'https://api.assemblyai.com/lemur/v3';
 
 		for (let i = 0; i < items.length; i++) {
 			try {
@@ -1799,6 +1656,18 @@ export class AssemblyAi implements INodeType {
 							...restAdditionalFields, // Spread without the collections
 						};
 
+						// Drop empty-string defaults from option-typed fields so the API uses its own defaults
+						if (body.domain === ('' as unknown as 'medical-v1')) {
+							delete body.domain;
+						}
+						if (body.remove_audio_tags === ('' as unknown as 'all')) {
+							delete body.remove_audio_tags;
+						}
+						// speakers_expected of 0 means "let the model decide"
+						if (body.speakers_expected === 0) {
+							delete body.speakers_expected;
+						}
+
 						// Handle keyterms_prompt
 						if (keyterms_prompt) {
 							const keytermsCollection = keyterms_prompt as IKeyTermsCollection;
@@ -1823,7 +1692,6 @@ export class AssemblyAi implements INodeType {
 									options?: {
 										expected_languages?: string;
 										fallback_language?: string;
-										code_switching?: boolean;
 										code_switching_confidence_threshold?: number;
 									};
 								}
@@ -1837,9 +1705,6 @@ export class AssemblyAi implements INodeType {
 								}
 								if (options.fallback_language && body.language_detection_options) {
 									body.language_detection_options.fallback_language = options.fallback_language;
-								}
-								if (options.code_switching !== undefined && body.language_detection_options) {
-									body.language_detection_options.code_switching = options.code_switching;
 								}
 								if (
 									options.code_switching_confidence_threshold !== undefined &&
@@ -1865,7 +1730,10 @@ export class AssemblyAi implements INodeType {
 						if (speaker_options) {
 							const options = (
 								speaker_options as {
-									options?: { min_speakers_expected?: number; max_speakers_expected?: number };
+									options?: {
+										min_speakers_expected?: number;
+										max_speakers_expected?: number;
+									};
 								}
 							).options;
 							if (options) {
@@ -1883,7 +1751,10 @@ export class AssemblyAi implements INodeType {
 						if (redact_pii_audio_options) {
 							const options = (
 								redact_pii_audio_options as {
-									options?: { return_redacted_no_speech_audio?: boolean };
+									options?: {
+										return_redacted_no_speech_audio?: boolean;
+										override_audio_redaction_method?: 'silence' | '';
+									};
 								}
 							).options;
 							if (options) {
@@ -1894,6 +1765,13 @@ export class AssemblyAi implements INodeType {
 								) {
 									body.redact_pii_audio_options.return_redacted_no_speech_audio =
 										options.return_redacted_no_speech_audio;
+								}
+								if (
+									options.override_audio_redaction_method &&
+									body.redact_pii_audio_options
+								) {
+									body.redact_pii_audio_options.override_audio_redaction_method =
+										options.override_audio_redaction_method as 'silence';
 								}
 							}
 						}
@@ -2044,6 +1922,9 @@ export class AssemblyAi implements INodeType {
 						if (listAdditionalFields.after_id) {
 							qs.after_id = listAdditionalFields.after_id;
 						}
+						if (listAdditionalFields.throttled_only) {
+							qs.throttled_only = listAdditionalFields.throttled_only;
+						}
 
 						responseData = await this.helpers.httpRequest({
 							method: 'GET',
@@ -2142,132 +2023,6 @@ export class AssemblyAi implements INodeType {
 							json: true,
 						});
 					}
-				} else if (resource === 'lemur') {
-					if (operation === 'getResponse') {
-						const requestId = this.getNodeParameter('lemurRequestId', i) as string;
-
-						responseData = await this.helpers.httpRequest({
-							method: 'GET',
-							url: `${baseLemurURL}/${requestId}`,
-							headers: {
-								Authorization: apiKey,
-								'User-Agent': userAgent,
-							},
-							json: true,
-						});
-					} else if (operation === 'purgeData') {
-						const requestId = this.getNodeParameter('lemurRequestId', i) as string;
-
-						responseData = await this.helpers.httpRequest({
-							method: 'DELETE',
-							url: `${baseLemurURL}/${requestId}`,
-							headers: {
-								Authorization: apiKey,
-								'User-Agent': userAgent,
-							},
-							json: true,
-						});
-					} else {
-						// All other LeMUR operations require transcript IDs
-						const transcriptIds = this.getNodeParameter('lemurTranscriptIds', i) as string;
-						const finalModel = this.getNodeParameter('final_model', i) as string;
-						const temperature = this.getNodeParameter('temperature', i) as number;
-						const maxOutputSize = this.getNodeParameter('max_output_size', i) as number;
-
-						const baseBody: ILemurBaseBody = {
-							transcript_ids: transcriptIds.split(',').map((id) => id.trim()),
-							final_model: finalModel,
-							temperature,
-							max_output_size: maxOutputSize,
-						};
-
-						// Only get context for operations that support it
-						if (['summary', 'questionAnswer'].includes(operation)) {
-							const context = this.getNodeParameter('context', i) as string;
-							if (context && context.trim()) {
-								baseBody.context = context;
-							}
-						}
-
-						if (operation === 'summary') {
-							responseData = await this.helpers.httpRequest({
-								method: 'POST',
-								url: `${baseLemurURL}/generate/summary`,
-								headers: {
-									Authorization: apiKey,
-									'Content-Type': 'application/json',
-									'User-Agent': userAgent,
-								},
-								body: JSON.stringify(baseBody),
-							});
-						} else if (operation === 'questionAnswer') {
-							const questionsCollection = this.getNodeParameter(
-								'questions',
-								i,
-							) as IQuestionsCollection;
-							const questionsArray = questionsCollection.question || [];
-
-							const processedQuestions = questionsArray.map(
-								(q: {
-									question: string;
-									answerType: string;
-									answer_format?: string;
-									answer_options?: {
-										option?: Array<{ value: string }>;
-									};
-								}) => {
-									const questionObj: Record<string, string | string[]> = {
-										question: q.question,
-									};
-
-									if (q.answerType === 'format' && q.answer_format) {
-										questionObj.answer_format = q.answer_format;
-									} else if (q.answerType === 'options' && q.answer_options) {
-										const optionsArray = q.answer_options.option || [];
-										questionObj.answer_options = optionsArray.map(
-											(opt: { value: string }) => opt.value,
-										);
-									}
-
-									return questionObj;
-								},
-							);
-
-							const body = {
-								...baseBody,
-								questions: processedQuestions,
-							};
-
-							responseData = await this.helpers.httpRequest({
-								method: 'POST',
-								url: `https://api.assemblyai.com/lemur/v3/generate/question-answer`,
-								headers: {
-									Authorization: apiKey,
-									'Content-Type': 'application/json',
-									'User-Agent': userAgent,
-								},
-								body: JSON.stringify(body),
-							});
-						} else if (operation === 'task') {
-							const prompt = this.getNodeParameter('prompt', i) as string;
-
-							const body = {
-								...baseBody,
-								prompt,
-							};
-
-							responseData = await this.helpers.httpRequest({
-								method: 'POST',
-								url: `${baseLemurURL}/generate/task`,
-								headers: {
-									Authorization: apiKey,
-									'Content-Type': 'application/json',
-									'User-Agent': userAgent,
-								},
-								body: JSON.stringify(body),
-							});
-						}
-					}
 				} else if (resource === 'llm_gateway') {
 					const llmGatewayURL = 'https://llm-gateway.assemblyai.com/v1';
 
@@ -2277,12 +2032,14 @@ export class AssemblyAi implements INodeType {
 
 						const body: {
 							model: string;
-							messages?: Array<{ role: string; content: string }>;
+							messages?: Array<{ role: string; content: string; tool_call_id?: string }>;
 							prompt?: string;
 							temperature?: number;
 							max_tokens?: number;
 							tools?: unknown[];
 							tool_choice?: string | Record<string, unknown>;
+							transcript_id?: string;
+							post_processing_steps?: Array<{ type: string }>;
 						} = {
 							model,
 						};
@@ -2293,16 +2050,28 @@ export class AssemblyAi implements INodeType {
 							body.prompt = promptValue;
 						}
 
+						// Add transcript_id if provided
+						const chatTranscriptId = this.getNodeParameter('chatTranscriptId', i, '') as string;
+						if (chatTranscriptId) {
+							body.transcript_id = chatTranscriptId;
+						}
+
 						// Add messages if provided
 						const messagesCollection = this.getNodeParameter('messages', i);
-						const msgCollection = messagesCollection as { message?: Array<{ role: string; content: string }> };
+						const msgCollection = messagesCollection as {
+							message?: Array<{ role: string; content: string; tool_call_id?: string }>;
+						};
 						if (msgCollection.message && Array.isArray(msgCollection.message) && msgCollection.message.length > 0) {
-							const messages: Array<{ role: string; content: string }> = [];
+							const messages: Array<{ role: string; content: string; tool_call_id?: string }> = [];
 							for (const msg of msgCollection.message) {
-								messages.push({
+								const built: { role: string; content: string; tool_call_id?: string } = {
 									role: msg.role,
 									content: msg.content,
-								});
+								};
+								if (msg.role === 'tool' && msg.tool_call_id) {
+									built.tool_call_id = msg.tool_call_id;
+								}
+								messages.push(built);
 							}
 							body.messages = messages;
 						}
@@ -2313,6 +2082,8 @@ export class AssemblyAi implements INodeType {
 							max_tokens?: number;
 							tools?: string;
 							tool_choice?: string;
+							tool_choice_function_name?: string;
+							json_repair?: boolean;
 						};
 						if (llmOptions.temperature !== undefined) {
 							body.temperature = llmOptions.temperature;
@@ -2332,7 +2103,24 @@ export class AssemblyAi implements INodeType {
 							}
 						}
 						if (llmOptions.tool_choice !== undefined) {
-							body.tool_choice = llmOptions.tool_choice;
+							if (llmOptions.tool_choice === 'function') {
+								if (!llmOptions.tool_choice_function_name) {
+									throw new NodeOperationError(
+										this.getNode(),
+										'Tool Choice Function Name is required when Tool Choice is "Specific Function"',
+										{ itemIndex: i },
+									);
+								}
+								body.tool_choice = {
+									type: 'function',
+									function: { name: llmOptions.tool_choice_function_name },
+								};
+							} else {
+								body.tool_choice = llmOptions.tool_choice;
+							}
+						}
+						if (llmOptions.json_repair) {
+							body.post_processing_steps = [{ type: 'json-repair' }];
 						}
 
 						responseData = await this.helpers.httpRequest({

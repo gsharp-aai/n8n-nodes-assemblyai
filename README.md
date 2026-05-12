@@ -15,7 +15,7 @@
 
 This is an n8n community node. It lets you use [AssemblyAI](https://www.assemblyai.com/) in your n8n workflows.
 
-[AssemblyAI](https://www.assemblyai.com/) develops industry-leading Speech AI models for transcription and audio understanding, accessible through their API. It provides features like speaker diarization, sentiment analysis, entity detection, PII redaction, and LLM Gateway capabilities for processing transcripts with AI.
+[AssemblyAI](https://www.assemblyai.com/) develops industry-leading Speech AI models for transcription and audio understanding, accessible through their API. It provides features like speaker diarization, sentiment analysis, entity detection, PII redaction, prompting (Universal-3 Pro), Medical Mode, and LLM Gateway capabilities for processing transcripts with AI.
 
 ## Resources
 - [n8n community nodes documentation](https://docs.n8n.io/integrations/community-nodes/)
@@ -23,7 +23,6 @@ This is an n8n community node. It lets you use [AssemblyAI](https://www.assembly
 - [AssemblyAI API documentation](https://www.assemblyai.com/docs)
   - [AssemblyAI Speech-to-Text guide](https://www.assemblyai.com/docs/getting-started/transcribe-an-audio-file)
   - [AssemblyAI LLM Gateway guide](https://www.assemblyai.com/docs/llm-gateway/apply-llms-to-audio-files)
-  - [AssemblyAI LeMUR guide](https://www.assemblyai.com/docs/lemur) - ⚠️ **Deprecated**: LeMUR is deprecated. Please use LLM Gateway instead.
 
 ## Quick links
 - [Installation](#installation)
@@ -63,15 +62,21 @@ Learn more about API keys in the [AssemblyAI documentation](https://www.assembly
 ### Transcript ([API Reference](https://www.assemblyai.com/docs/api-reference/transcripts/submit))
 
 - **Create**: Start a new transcription job with support for:
-  - Language detection
-  - Speaker diarization
-  - PII redaction and profanity filtering
-  - **Speech Understanding**:
-    - Enable translation, speaker identification, and/or custom formatting during transcription
-    - Keyterm prompting, punctuation, disfluencies, formatting, sentiment analysis, entity detection, chapterization, etc.
+  - **Speech models**: prefer `speech_models` (priority list, e.g. `universal-3-pro,universal-2`). Legacy `speech_model` field is still available for backwards compatibility.
+  - **Prompting** (Universal-3 Pro): pass a `prompt` (up to 1500 words) to steer transcription style and accuracy
+  - **Medical Mode**: set `domain` to `medical-v1` for specialised medical-terminology accuracy
+  - **Remove Audio Tags** (Universal-3 Pro): strip inline annotations like `[laughter]`, `[music]`, and speaker cues
+  - **Language detection** with `expected_languages`, `fallback_language`, `code_switching_confidence_threshold`
+  - **Code-switching transcription** via the top-level `language_codes` field
+  - **Speaker diarization** with `speakers_expected` and `speaker_options` (min/max speakers)
+  - **PII redaction** with `redact_pii_return_unredacted` and `override_audio_redaction_method` (silence)
+  - **Keyterm prompting** to boost recognition of domain-specific terminology
+  - **Profanity filtering**, sentiment analysis, entity detection, content safety, IAB categories, auto-chapters
+  - **Speech Understanding** at create time: translation, speaker identification, custom formatting
+  - Summarization fields (`summarization`, `summary_model`, `summary_type`) are still available but **deprecated** — use the LLM Gateway resource instead.
 - **Get**: Retrieve a transcription by ID
 - **Delete**: Delete a transcription
-- **List**: List all your transcriptions
+- **List**: List all your transcriptions, filtered by status, date, ID range, or `throttled_only`
 - **Get Sentences**: Get transcript broken into sentences
 - **Get Paragraphs**: Get transcript broken into paragraphs
 - **Get Subtitles**: Export subtitles in SRT or VTT format
@@ -80,21 +85,14 @@ Learn more about API keys in the [AssemblyAI documentation](https://www.assembly
 
 ### LLM Gateway ([API Reference](https://www.assemblyai.com/docs/api-reference/llm-gateway/create-chat-completion))
 
-- **Chat Completion**: Send chat completion requests to LLMs (Claude, GPT, Gemini models). See [available models](https://www.assemblyai.com/docs/llm-gateway/overview#available-models).
+- **Chat Completion**: Send chat completion requests to LLMs (Claude, GPT, Gemini, Qwen, Kimi). See [available models](https://www.assemblyai.com/docs/llm-gateway/overview#available-models). Supports:
+  - **Transcript injection**: pass `transcript_id` to substitute `{{ transcript }}` in your prompt with the transcript's text
+  - **Tool calling**: provide a JSON `tools` array; force a specific function via `Tool Choice: Specific Function` and a function name; multi-turn round-trips via the `Tool` message role + `tool_call_id`
+  - **JSON repair post-processing**: opt-in toggle that sends `post_processing_steps: [{ type: "json-repair" }]` to fix malformed JSON in tool-call arguments or structured outputs
 - **Speech Understanding**: Process speech understanding tasks on existing transcripts:
   - **Translation**: Translate transcripts into multiple languages
   - **Speaker Identification**: Identify speakers by name or role
   - **Custom Formatting**: Apply custom formatting to dates, phone numbers, and emails
-
-### LeMUR
-
-⚠️ **Deprecated**: LeMUR is deprecated. Please use LLM Gateway instead.
-
-- **Summary**: Generate AI summaries of transcripts
-- **Question & Answer**: Ask questions about your transcripts
-- **Custom Task**: Run custom AI tasks on transcripts
-- **Get Response**: Retrieve a LeMUR response by ID
-- **Purge Data**: Delete LeMUR request data
 
 ## Development
 

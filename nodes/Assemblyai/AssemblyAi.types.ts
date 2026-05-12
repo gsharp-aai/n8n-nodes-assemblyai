@@ -1,6 +1,6 @@
 export interface IAdditionalFields {
 	// Speech recognition options
-	speech_model?: 'universal' | 'slam-1';
+	speech_model?: 'universal' | 'universal-2' | 'universal-3-pro' | 'slam-1' | 'best' | 'nano';
 	speech_models?: string; // Comma-separated list
 	language_code?: string;
 	language_codes?: string; // Comma-separated list for code switching
@@ -9,7 +9,6 @@ export interface IAdditionalFields {
 		options?: {
 			expected_languages?: string;
 			fallback_language?: string;
-			code_switching?: boolean;
 			code_switching_confidence_threshold?: number;
 		};
 	};
@@ -21,6 +20,9 @@ export interface IAdditionalFields {
 	audio_start_from?: number;
 	audio_end_at?: number;
 	speech_threshold?: number;
+	prompt?: string;
+	domain?: 'medical-v1';
+	remove_audio_tags?: 'all';
 
 	// Speaker diarization
 	speaker_labels?: boolean;
@@ -53,9 +55,11 @@ export interface IAdditionalFields {
 	redact_pii_audio_options?: {
 		options?: {
 			return_redacted_no_speech_audio?: boolean;
+			override_audio_redaction_method?: 'silence';
 		};
 	};
 	redact_pii_policies?: string[];
+	redact_pii_return_unredacted?: boolean;
 
 	// Webhooks
 	webhook_url?: string;
@@ -94,6 +98,7 @@ export interface IListAdditionalFields {
 	created_on?: string;
 	before_id?: string;
 	after_id?: string;
+	throttled_only?: boolean;
 }
 
 export interface ICustomSpellingCollection {
@@ -107,20 +112,12 @@ export interface IKeyTermsCollection {
 	term?: Array<{ value: string }>;
 }
 
-export interface ILemurBaseBody {
-	transcript_ids: string[];
-	final_model: string;
-	temperature: number;
-	max_output_size: number;
-	context?: string;
-}
-
 export interface ITranscriptCreateBody {
 	// Required field
 	audio_url: string;
 
 	// Speech recognition options
-	speech_model?: 'universal' | 'slam-1' | 'best';
+	speech_model?: 'universal' | 'universal-2' | 'universal-3-pro' | 'slam-1' | 'best' | 'nano';
 	speech_models?: string[]; // Array of speech models in priority order
 	language_code?: string;
 	language_codes?: string[]; // Array for code switching
@@ -128,7 +125,6 @@ export interface ITranscriptCreateBody {
 	language_detection_options?: {
 		expected_languages?: string[];
 		fallback_language?: string;
-		code_switching?: boolean;
 		code_switching_confidence_threshold?: number;
 	};
 	language_confidence_threshold?: number;
@@ -140,6 +136,9 @@ export interface ITranscriptCreateBody {
 	audio_start_from?: number;
 	audio_end_at?: number;
 	speech_threshold?: number;
+	prompt?: string;
+	domain?: 'medical-v1';
+	remove_audio_tags?: 'all';
 
 	// Speaker diarization
 	speaker_labels?: boolean;
@@ -169,8 +168,10 @@ export interface ITranscriptCreateBody {
 	redact_pii_audio_quality?: 'mp3' | 'wav';
 	redact_pii_audio_options?: {
 		return_redacted_no_speech_audio?: boolean;
+		override_audio_redaction_method?: 'silence';
 	};
 	redact_pii_policies?: string[];
+	redact_pii_return_unredacted?: boolean;
 
 	// Webhooks
 	webhook_url?: string;
@@ -214,17 +215,6 @@ export interface IQueryParams {
 	chars_per_caption?: number;
 	words?: string;
 	[key: string]: string | number | boolean | undefined;
-}
-
-export interface IQuestionsCollection {
-	question?: Array<{
-		question: string;
-		answerType: string; // This is for n8n UI logic
-		answer_format?: string;
-		answer_options?: {
-			option?: Array<{ value: string }>; // Nested structure for n8n fixedCollection
-		};
-	}>;
 }
 
 export interface IWordsCollection {
