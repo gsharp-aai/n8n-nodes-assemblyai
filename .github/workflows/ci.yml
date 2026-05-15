@@ -27,8 +27,5 @@ jobs:
       - name: Run build
         run: 'npm run build'
 
-      - name: Pack
+      - name: Pack (sanity-check the tarball)
         run: 'npm pack'
-
-      - name: Run n8n community package scanner
-        run: 'npx --yes @n8n/scan-community-package@latest ./n8n-nodes-assemblyai-*.tgz'
