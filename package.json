@@ -1,6 +1,6 @@
 {
 	"name": "n8n-nodes-assemblyai",
-	"version": "0.3.0",
+	"version": "0.3.1",
 	"description": "n8n node for AssemblyAI speech-to-text transcription models.",
 	"license": "MIT",
 	"homepage": "https://github.com/gsharp-aai/n8n-nodes-assemblyai#readme",
@@ -31,6 +31,7 @@
 		"build:watch": "tsc --watch",
 		"lint": "n8n-node lint",
 		"lint:fix": "n8n-node lint --fix",
+		"scan": "npx --yes @n8n/scan-community-package@latest n8n-nodes-assemblyai --safe-chain-skip-minimum-package-age",
 		"prepublishOnly": "n8n-node prerelease",
 		"release": "n8n-node release"
 	},
@@ -48,12 +49,12 @@
 		]
 	},
 	"devDependencies": {
-		"@n8n/node-cli": "*",
+		"@n8n/node-cli": "^0.30.1",
+		"@types/node": "^24.6.0",
 		"eslint": "9.32.0",
 		"prettier": "3.6.2",
 		"release-it": "^19.0.4",
-		"typescript": "5.9.2",
-		"@types/node": "^24.6.0"
+		"typescript": "5.9.2"
 	},
 	"peerDependencies": {
 		"n8n-workflow": "*"

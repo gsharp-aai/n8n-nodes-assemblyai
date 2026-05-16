@@ -1,0 +1,46 @@
+name: Release
+
+# Publishes to npm with provenance attestation when a v* tag is pushed.
+# Required repo secret: NPM_TOKEN (Granular Access Token scoped to this package).
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: 'npm ci'
+
+      - name: Run lint
+        run: 'npm run lint'
+
+      - name: Run build
+        run: 'npm run build'
+
+      - name: Publish to npm with provenance
+        run: 'npm publish --provenance --access public --ignore-scripts'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Wait for registry propagation
+        run: 'sleep 30'
+
+      - name: Verify with n8n community package scanner
+        run: 'npx --yes @n8n/scan-community-package@latest n8n-nodes-assemblyai'

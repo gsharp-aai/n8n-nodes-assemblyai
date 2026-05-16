@@ -3,6 +3,7 @@ import {
 	INodeExecutionData,
 	INodeType,
 	INodeTypeDescription,
+	NodeConnectionTypes,
 	NodeOperationError,
 } from 'n8n-workflow';
 
@@ -35,8 +36,8 @@ export class AssemblyAi implements INodeType {
 			name: 'AssemblyAI',
 			// color: '#2545D3',
 		},
-		inputs: ['main'],
-		outputs: ['main'],
+		inputs: [NodeConnectionTypes.Main],
+		outputs: [NodeConnectionTypes.Main],
 		credentials: [
 			{
 				name: 'assemblyAiApi',
@@ -1436,9 +1437,9 @@ export class AssemblyAi implements INodeType {
 					},
 				},
 				options: [
-					{ name: 'Translation', value: 'translation' },
-					{ name: 'Speaker Identification', value: 'speaker_identification' },
 					{ name: 'Custom Formatting', value: 'custom_formatting' },
+					{ name: 'Speaker Identification', value: 'speaker_identification' },
+					{ name: 'Translation', value: 'translation' },
 				],
 				description: 'Type of speech understanding task to perform',
 			},
@@ -1496,8 +1497,8 @@ export class AssemblyAi implements INodeType {
 				default: 'role',
 				required: true,
 				options: [
-					{ name: 'Role', value: 'role' },
 					{ name: 'Name', value: 'name' },
+					{ name: 'Role', value: 'role' },
 				],
 				displayOptions: {
 					show: {
@@ -1579,12 +1580,10 @@ export class AssemblyAi implements INodeType {
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
 		const items = this.getInputData();
 		const returnData: INodeExecutionData[] = [];
-		const credentials = await this.getCredentials('assemblyAiApi');
 		const resource = this.getNodeParameter('resource', 0) as string;
 		const operation = this.getNodeParameter('operation', 0) as string;
 
 		const userAgent = `n8n-assemblyai-node/${AAI_NODE_VERSION}`;
-		const apiKey = credentials.apiKey as string;
 		const baseURL = 'https://api.assemblyai.com/v2';
 
 		for (let i = 0; i < items.length; i++) {
@@ -1617,12 +1616,11 @@ export class AssemblyAi implements INodeType {
 							);
 						}
 
-						responseData = await this.helpers.httpRequest({
+						responseData = await this.helpers.httpRequestWithAuthentication.call(this, 'assemblyAiApi', {
 							method: 'POST',
 							url: `${baseURL}/upload`,
 							headers: {
-								Authorization: apiKey,
-								'Content-Type': 'application/octet-stream',
+									'Content-Type': 'application/octet-stream',
 								'User-Agent': userAgent,
 							},
 					body: fileData,
@@ -1864,12 +1862,11 @@ export class AssemblyAi implements INodeType {
 							}
 						}
 
-						responseData = await this.helpers.httpRequest({
+						responseData = await this.helpers.httpRequestWithAuthentication.call(this, 'assemblyAiApi', {
 							method: 'POST',
 							url: `${baseURL}/transcript`,
 							headers: {
-								Authorization: apiKey,
-								'Content-Type': 'application/json',
+									'Content-Type': 'application/json',
 								'User-Agent': userAgent,
 							},
 							body: JSON.stringify(body),
@@ -1877,24 +1874,22 @@ export class AssemblyAi implements INodeType {
 					} else if (operation === 'get') {
 						const transcriptId = this.getNodeParameter('transcriptId', i) as string;
 
-						responseData = await this.helpers.httpRequest({
+						responseData = await this.helpers.httpRequestWithAuthentication.call(this, 'assemblyAiApi', {
 							method: 'GET',
 							url: `${baseURL}/transcript/${transcriptId}`,
 							headers: {
-								Authorization: apiKey,
-								'User-Agent': userAgent,
+									'User-Agent': userAgent,
 							},
 							json: true,
 						});
 					} else if (operation === 'delete') {
 						const transcriptId = this.getNodeParameter('transcriptId', i) as string;
 
-						responseData = await this.helpers.httpRequest({
+						responseData = await this.helpers.httpRequestWithAuthentication.call(this, 'assemblyAiApi', {
 							method: 'DELETE',
 							url: `${baseURL}/transcript/${transcriptId}`,
 							headers: {
-								Authorization: apiKey,
-								'User-Agent': userAgent,
+									'User-Agent': userAgent,
 							},
 							json: true,
 						});
@@ -1926,12 +1921,11 @@ export class AssemblyAi implements INodeType {
 							qs.throttled_only = listAdditionalFields.throttled_only;
 						}
 
-						responseData = await this.helpers.httpRequest({
+						responseData = await this.helpers.httpRequestWithAuthentication.call(this, 'assemblyAiApi', {
 							method: 'GET',
 							url: `${baseURL}/transcript`,
 							headers: {
-								Authorization: apiKey,
-								'User-Agent': userAgent,
+									'User-Agent': userAgent,
 							},
 							qs,
 							json: true,
@@ -1946,48 +1940,44 @@ export class AssemblyAi implements INodeType {
 							qs.chars_per_caption = charsPerCaption;
 						}
 
-						responseData = await this.helpers.httpRequest({
+						responseData = await this.helpers.httpRequestWithAuthentication.call(this, 'assemblyAiApi', {
 							method: 'GET',
 							url: `${baseURL}/transcript/${transcriptId}/${format}`,
 							headers: {
-								Authorization: apiKey,
-								'User-Agent': userAgent,
+									'User-Agent': userAgent,
 							},
 							qs,
 						});
 					} else if (operation === 'getSentences') {
 						const transcriptId = this.getNodeParameter('transcriptId', i) as string;
 
-						responseData = await this.helpers.httpRequest({
+						responseData = await this.helpers.httpRequestWithAuthentication.call(this, 'assemblyAiApi', {
 							method: 'GET',
 							url: `${baseURL}/transcript/${transcriptId}/sentences`,
 							headers: {
-								Authorization: apiKey,
-								'User-Agent': userAgent,
+									'User-Agent': userAgent,
 							},
 							json: true,
 						});
 					} else if (operation === 'getParagraphs') {
 						const transcriptId = this.getNodeParameter('transcriptId', i) as string;
 
-						responseData = await this.helpers.httpRequest({
+						responseData = await this.helpers.httpRequestWithAuthentication.call(this, 'assemblyAiApi', {
 							method: 'GET',
 							url: `${baseURL}/transcript/${transcriptId}/paragraphs`,
 							headers: {
-								Authorization: apiKey,
-								'User-Agent': userAgent,
+									'User-Agent': userAgent,
 							},
 							json: true,
 						});
 					} else if (operation === 'getRedactedAudio') {
 						const transcriptId = this.getNodeParameter('transcriptId', i) as string;
 
-						responseData = await this.helpers.httpRequest({
+						responseData = await this.helpers.httpRequestWithAuthentication.call(this, 'assemblyAiApi', {
 							method: 'GET',
 							url: `${baseURL}/transcript/${transcriptId}/redacted-audio`,
 							headers: {
-								Authorization: apiKey,
-								'User-Agent': userAgent,
+									'User-Agent': userAgent,
 							},
 							json: true,
 						});
@@ -2010,12 +2000,11 @@ export class AssemblyAi implements INodeType {
 							words = wordsArray.map((item: { term: string }) => item.term).join(',');
 						}
 
-						responseData = await this.helpers.httpRequest({
+						responseData = await this.helpers.httpRequestWithAuthentication.call(this, 'assemblyAiApi', {
 							method: 'GET',
 							url: `${baseURL}/transcript/${transcriptId}/word-search`,
 							headers: {
-								Authorization: apiKey,
-								'User-Agent': userAgent,
+									'User-Agent': userAgent,
 							},
 							qs: {
 								words: words,
@@ -2123,12 +2112,11 @@ export class AssemblyAi implements INodeType {
 							body.post_processing_steps = [{ type: 'json-repair' }];
 						}
 
-						responseData = await this.helpers.httpRequest({
+						responseData = await this.helpers.httpRequestWithAuthentication.call(this, 'assemblyAiApi', {
 							method: 'POST',
 							url: `${llmGatewayURL}/chat/completions`,
 							headers: {
-								Authorization: apiKey,
-								'Content-Type': 'application/json',
+									'Content-Type': 'application/json',
 								'User-Agent': userAgent,
 							},
 							body: JSON.stringify(body),
@@ -2201,12 +2189,11 @@ export class AssemblyAi implements INodeType {
 							speech_understanding: speechUnderstanding,
 						};
 
-						responseData = await this.helpers.httpRequest({
+						responseData = await this.helpers.httpRequestWithAuthentication.call(this, 'assemblyAiApi', {
 							method: 'POST',
 							url: `${llmGatewayURL}/understanding`,
 							headers: {
-								Authorization: apiKey,
-								'Content-Type': 'application/json',
+									'Content-Type': 'application/json',
 								'User-Agent': userAgent,
 							},
 							body: JSON.stringify(body),
