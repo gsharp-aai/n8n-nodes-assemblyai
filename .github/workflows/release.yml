@@ -1,7 +1,9 @@
 name: Release
 
 # Publishes to npm with provenance attestation when a v* tag is pushed.
-# Required repo secret: NPM_TOKEN (Granular Access Token scoped to this package).
+# Auth: npm Trusted Publishing via GitHub Actions OIDC — no NPM_TOKEN secret required.
+# Configure the trusted publisher on npm at:
+#   https://www.npmjs.com/package/n8n-nodes-assemblyai/access
 
 on:
   push:
@@ -34,10 +36,8 @@ jobs:
       - name: Run build
         run: 'npm run build'
 
-      - name: Publish to npm with provenance
+      - name: Publish to npm with provenance (Trusted Publishing via OIDC)
         run: 'npm publish --provenance --access public --ignore-scripts'
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Wait for registry propagation
         run: 'sleep 30'
