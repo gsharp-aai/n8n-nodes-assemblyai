@@ -1,7 +1,6 @@
 export interface IAdditionalFields {
 	// Speech recognition options
-	speech_model?: 'universal' | 'universal-2' | 'universal-3-pro' | 'universal-3-5-pro';
-	speech_models?: string; // Comma-separated list
+	speech_models?: string; // Comma-separated list (only way to select a model; singular speech_model is no longer supported)
 	language_code?: string;
 	language_codes?: string; // Comma-separated list for code switching
 	language_detection?: boolean;
@@ -120,8 +119,7 @@ export interface ITranscriptCreateBody {
 	audio_url: string;
 
 	// Speech recognition options
-	speech_model?: 'universal' | 'universal-2' | 'universal-3-pro' | 'universal-3-5-pro';
-	speech_models?: string[]; // Array of speech models in priority order
+	speech_models?: string[]; // Array of speech models in priority order (only way to select a model)
 	language_code?: string;
 	language_codes?: string[]; // Array for code switching
 	language_detection?: boolean;

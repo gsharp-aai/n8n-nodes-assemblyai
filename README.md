@@ -63,7 +63,7 @@ Learn more about API keys in the [AssemblyAI documentation](https://www.assembly
 ### Transcript ([API Reference](https://www.assemblyai.com/docs/api-reference/transcripts/submit))
 
 - **Create**: Start a new transcription job with support for:
-  - **Speech models**: prefer `speech_models` (priority list, e.g. `universal-3-5-pro,universal-3-pro,universal-2`). Available models: Universal, Universal-2, Universal-3 Pro, Universal-3.5 Pro. Legacy `speech_model` (singular) field still available for backwards compatibility.
+  - **Speech models**: set `speech_models` (priority list, e.g. `universal-3-5-pro,universal-3-pro,universal-2`) to choose a model. The API routes per language and falls back through the list. Available models: Universal, Universal-2, Universal-3 Pro, Universal-3.5 Pro. **`speech_models` is now the only way to select a model** — the legacy singular `speech_model` field was removed in v0.4.0 (the API rejected pro models on it). Leave empty to let the API choose.
   - **Prompting** (Universal-3 Pro / Universal-3.5 Pro): pass a `prompt` (up to 1500 words) to steer transcription style and accuracy
   - **Temperature** (Universal-3 Pro / Universal-3.5 Pro): sampling temperature 0.0–1.0
   - **Medical Mode**: set `domain` to `medical-v1` for specialised medical-terminology accuracy

@@ -772,28 +772,14 @@ export class AssemblyAi implements INodeType {
 						},
 						description: 'Expected total number of speakers. Leave at 0 to let the model decide. Mutually exclusive with the min/max values in Speaker Options.',
 					},
-					{
-						displayName: 'Speech Model (Legacy)',
-						name: 'speech_model',
-						type: 'options',
-						default: '',
-						options: [
-							{ name: 'Default (Let API Choose)', value: '' },
-							{ name: 'Universal', value: 'universal' },
-							{ name: 'Universal-2', value: 'universal-2' },
-							{ name: 'Universal-3 Pro', value: 'universal-3-pro' },
-							{ name: 'Universal-3.5 Pro', value: 'universal-3-5-pro' },
-						],
-						description: 'Legacy single-model parameter. Prefer Speech Models (Priority Order) for new workflows. Cannot be combined with Speech Models.',
-					},
-					// Multiple Speech Models
+					// Speech Models
 					{
 						displayName: 'Speech Models (Priority Order)',
 						name: 'speech_models',
 						type: 'string',
 						default: '',
 						description:
-							'Recommended. Comma-separated list of speech models in priority order. The API routes per language and falls back through the list. Example: "universal-3-5-pro,universal-3-pro,universal-2".',
+							'Comma-separated list of speech models in priority order. The API routes per language and falls back through the list. Example: "universal-3-5-pro,universal-3-pro,universal-2". Leave empty to let the API choose. This is the only way to select a model — the legacy single speech_model parameter is no longer supported.',
 						placeholder: 'universal-3-5-pro,universal-3-pro,universal-2',
 					},
 					{
