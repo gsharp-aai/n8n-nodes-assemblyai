@@ -49,7 +49,8 @@ To use this node, you need an AssemblyAI API key.
 1. In n8n, go to **Credentials** → **New**
 2. Search for **AssemblyAI API** and select it
 3. Enter your API key from the AssemblyAI dashboard
-4. Click **Save**
+4. Choose your **Data Region** — `US (Default)` or `EU (Data Residency)`. The EU region routes every request to `api.eu.assemblyai.com` / `llm-gateway.eu.assemblyai.com`, keeping audio and transcription data within the European Union.
+5. Click **Save**
 
 Learn more about API keys in the [AssemblyAI documentation](https://www.assemblyai.com/docs/deployment/account-management#api-keys).
 
@@ -62,18 +63,19 @@ Learn more about API keys in the [AssemblyAI documentation](https://www.assembly
 ### Transcript ([API Reference](https://www.assemblyai.com/docs/api-reference/transcripts/submit))
 
 - **Create**: Start a new transcription job with support for:
-  - **Speech models**: prefer `speech_models` (priority list, e.g. `universal-3-pro,universal-2`). Legacy `speech_model` field is still available for backwards compatibility.
-  - **Prompting** (Universal-3 Pro): pass a `prompt` (up to 1500 words) to steer transcription style and accuracy
+  - **Speech models**: prefer `speech_models` (priority list, e.g. `universal-3-5-pro,universal-3-pro,universal-2`). Available models: Universal, Universal-2, Universal-3 Pro, Universal-3.5 Pro. Legacy `speech_model` (singular) field still available for backwards compatibility.
+  - **Prompting** (Universal-3 Pro / Universal-3.5 Pro): pass a `prompt` (up to 1500 words) to steer transcription style and accuracy
+  - **Temperature** (Universal-3 Pro / Universal-3.5 Pro): sampling temperature 0.0–1.0
   - **Medical Mode**: set `domain` to `medical-v1` for specialised medical-terminology accuracy
   - **Remove Audio Tags** (Universal-3 Pro): strip inline annotations like `[laughter]`, `[music]`, and speaker cues
-  - **Language detection** with `expected_languages`, `fallback_language`, `code_switching_confidence_threshold`
+  - **Language detection** with `expected_languages`, `fallback_language`, `code_switching` boolean (Universal-2), `code_switching_confidence_threshold`
   - **Code-switching transcription** via the top-level `language_codes` field
   - **Speaker diarization** with `speakers_expected` and `speaker_options` (min/max speakers)
-  - **PII redaction** with `redact_pii_return_unredacted` and `override_audio_redaction_method` (silence)
+  - **PII redaction** with `redact_pii_return_unredacted`, `override_audio_redaction_method` (silence), and **Redact Static Entities** (custom label → terms map for literal find-and-replace)
   - **Keyterm prompting** to boost recognition of domain-specific terminology
-  - **Profanity filtering**, sentiment analysis, entity detection, content safety, IAB categories, auto-chapters
+  - **Profanity filtering**, sentiment analysis, entity detection, content safety, IAB categories
   - **Speech Understanding** at create time: translation, speaker identification, custom formatting
-  - Summarization fields (`summarization`, `summary_model`, `summary_type`) are still available but **deprecated** — use the LLM Gateway resource instead.
+  - `auto_chapters`, `summarization`, `summary_model`, `summary_type` are still available but **deprecated** — use the LLM Gateway resource instead.
 - **Get**: Retrieve a transcription by ID
 - **Delete**: Delete a transcription
 - **List**: List all your transcriptions, filtered by status, date, ID range, or `throttled_only`

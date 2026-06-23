@@ -214,11 +214,11 @@ export class AssemblyAi implements INodeType {
 						description: 'Start transcribing from this time in milliseconds',
 					},
 					{
-						displayName: 'Auto Chapters',
+						displayName: 'Auto Chapters (Deprecated)',
 						name: 'auto_chapters',
 						type: 'boolean',
 						default: false,
-						description: 'Whether to automatically generate chapters',
+						description: 'Whether to automatically generate chapters. Deprecated and will be removed in a later release. Use the LLM Gateway resource (Chat Completion) for chapter summaries instead.',
 					},
 					{
 						displayName: 'Auto Highlights',
@@ -457,6 +457,13 @@ export class AssemblyAi implements INodeType {
 											'Language to use if detected language is not in expected list. Use "auto" to let the model choose.',
 									},
 									{
+										displayName: 'Code Switching',
+										name: 'code_switching',
+										type: 'boolean',
+										default: false,
+										description: 'Whether to enable code-switching detection (mid-stream language changes). Supported on Universal-2; the field is silently ignored on accounts that do not have the feature enabled.',
+									},
+									{
 										displayName: 'Code Switching Confidence Threshold',
 										name: 'code_switching_confidence_threshold',
 										type: 'number',
@@ -466,7 +473,7 @@ export class AssemblyAi implements INodeType {
 											maxValue: 1,
 											numberStepSize: 0.1,
 										},
-										description: 'Confidence threshold for detecting code switching (0-1). For multi-language transcription, configure the top-level Language Codes field.',
+										description: 'Confidence threshold for detecting code switching (0-1). Only takes effect when Code Switching is enabled.',
 									},
 								],
 							},
@@ -652,6 +659,45 @@ export class AssemblyAi implements INodeType {
 						description: 'How to replace redacted PII in transcript',
 					},
 					{
+						displayName: 'Redact Static Entities',
+						name: 'redact_static_entities',
+						type: 'fixedCollection',
+						typeOptions: {
+							multipleValues: true,
+						},
+						default: {},
+						displayOptions: {
+							show: {
+								redact_pii: [true],
+							},
+						},
+						description: 'Custom redaction labels with exact-match terms. Each label maps to a list of literal strings that will be replaced in the transcript (and audio, if Redact PII Audio is enabled). Requires Redact PII to be enabled.',
+						options: [
+							{
+								name: 'entries',
+								displayName: 'Entity',
+								values: [
+									{
+										displayName: 'Label',
+										name: 'label',
+										type: 'string',
+										default: '',
+										description: 'Custom redaction label (e.g. INTERNAL_TOOL)',
+										placeholder: 'INTERNAL_TOOL',
+									},
+									{
+										displayName: 'Examples',
+										name: 'examples',
+										type: 'string',
+										default: '',
+										description: 'Comma-separated list of exact terms to redact under this label',
+										placeholder: 'Bearclaw, Cubclaw',
+									},
+								],
+							},
+						],
+					},
+					{
 						displayName: 'Remove Audio Tags',
 						name: 'remove_audio_tags',
 						type: 'options',
@@ -732,13 +778,11 @@ export class AssemblyAi implements INodeType {
 						type: 'options',
 						default: '',
 						options: [
-							{ name: 'Best (Deprecated)', value: 'best' },
 							{ name: 'Default (Let API Choose)', value: '' },
-							{ name: 'Nano (Deprecated)', value: 'nano' },
-							{ name: 'Slam-1', value: 'slam-1' },
 							{ name: 'Universal', value: 'universal' },
 							{ name: 'Universal-2', value: 'universal-2' },
 							{ name: 'Universal-3 Pro', value: 'universal-3-pro' },
+							{ name: 'Universal-3.5 Pro', value: 'universal-3-5-pro' },
 						],
 						description: 'Legacy single-model parameter. Prefer Speech Models (Priority Order) for new workflows. Cannot be combined with Speech Models.',
 					},
@@ -749,8 +793,8 @@ export class AssemblyAi implements INodeType {
 						type: 'string',
 						default: '',
 						description:
-							'Recommended. Comma-separated list of speech models in priority order. The API routes per language and falls back through the list. Example: "universal-3-pro,universal-2".',
-						placeholder: 'universal-3-pro,universal-2',
+							'Recommended. Comma-separated list of speech models in priority order. The API routes per language and falls back through the list. Example: "universal-3-5-pro,universal-3-pro,universal-2".',
+						placeholder: 'universal-3-5-pro,universal-3-pro,universal-2',
 					},
 					{
 						displayName: 'Speech Threshold',
@@ -933,6 +977,18 @@ export class AssemblyAi implements INodeType {
 							},
 						},
 						description: 'Deprecated. Will be removed in a later release. Use the LLM Gateway resource (Chat Completion) for summarization.',
+					},
+					{
+						displayName: 'Temperature',
+						name: 'temperature',
+						type: 'number',
+						default: '',
+						typeOptions: {
+							minValue: 0,
+							maxValue: 1,
+							numberStepSize: 0.1,
+						},
+						description: 'Sampling temperature for transcription (0-1). Only valid with Universal-3 Pro or Universal-3.5 Pro speech models.',
 					},
 					{
 						displayName: 'Webhook Auth Header',
@@ -1583,8 +1639,16 @@ export class AssemblyAi implements INodeType {
 		const resource = this.getNodeParameter('resource', 0) as string;
 		const operation = this.getNodeParameter('operation', 0) as string;
 
+		// Region is the only credential field we read directly — the Authorization header
+		// is still injected by httpRequestWithAuthentication via the credential's
+		// authenticate block. We only need the region to pick the right base URL.
+		const credentials = await this.getCredentials('assemblyAiApi');
+		const region = (credentials.region as string | undefined) ?? 'us';
+		const transcriptHost = region === 'eu' ? 'https://api.eu.assemblyai.com' : 'https://api.assemblyai.com';
+		const llmGatewayHost = region === 'eu' ? 'https://llm-gateway.eu.assemblyai.com' : 'https://llm-gateway.assemblyai.com';
+
 		const userAgent = `n8n-assemblyai-node/${AAI_NODE_VERSION}`;
-		const baseURL = 'https://api.assemblyai.com/v2';
+		const baseURL = `${transcriptHost}/v2`;
 
 		for (let i = 0; i < items.length; i++) {
 			try {
@@ -1643,6 +1707,7 @@ export class AssemblyAi implements INodeType {
 							speech_models,
 							speaker_options,
 							redact_pii_audio_options,
+							redact_static_entities,
 							speech_understanding_translation,
 							speech_understanding_speaker_id,
 							speech_understanding_formatting,
@@ -1664,6 +1729,10 @@ export class AssemblyAi implements INodeType {
 						// speakers_expected of 0 means "let the model decide"
 						if (body.speakers_expected === 0) {
 							delete body.speakers_expected;
+						}
+						// temperature is an empty string when the user did not set it — drop it
+						if (body.temperature === ('' as unknown as number)) {
+							delete body.temperature;
 						}
 
 						// Handle keyterms_prompt
@@ -1690,6 +1759,7 @@ export class AssemblyAi implements INodeType {
 									options?: {
 										expected_languages?: string;
 										fallback_language?: string;
+										code_switching?: boolean;
 										code_switching_confidence_threshold?: number;
 									};
 								}
@@ -1703,6 +1773,9 @@ export class AssemblyAi implements INodeType {
 								}
 								if (options.fallback_language && body.language_detection_options) {
 									body.language_detection_options.fallback_language = options.fallback_language;
+								}
+								if (options.code_switching !== undefined && body.language_detection_options) {
+									body.language_detection_options.code_switching = options.code_switching;
 								}
 								if (
 									options.code_switching_confidence_threshold !== undefined &&
@@ -1770,6 +1843,31 @@ export class AssemblyAi implements INodeType {
 								) {
 									body.redact_pii_audio_options.override_audio_redaction_method =
 										options.override_audio_redaction_method as 'silence';
+								}
+							}
+						}
+
+						// Handle redact_static_entities — UI fixedCollection -> { LABEL: ["term1", "term2"], ... }
+						if (redact_static_entities) {
+							const entries = (
+								redact_static_entities as {
+									entries?: Array<{ label?: string; examples?: string }>;
+								}
+							).entries;
+							if (entries && entries.length > 0) {
+								const staticMap: Record<string, string[]> = {};
+								for (const entry of entries) {
+									const label = (entry.label ?? '').trim();
+									const examples = (entry.examples ?? '')
+										.split(',')
+										.map((s) => s.trim())
+										.filter(Boolean);
+									if (label && examples.length > 0) {
+										staticMap[label] = examples;
+									}
+								}
+								if (Object.keys(staticMap).length > 0) {
+									body.redact_static_entities = staticMap;
 								}
 							}
 						}
@@ -2013,7 +2111,7 @@ export class AssemblyAi implements INodeType {
 						});
 					}
 				} else if (resource === 'llm_gateway') {
-					const llmGatewayURL = 'https://llm-gateway.assemblyai.com/v1';
+					const llmGatewayURL = `${llmGatewayHost}/v1`;
 
 					if (operation === 'chatCompletion') {
 						const model = this.getNodeParameter('model', i) as string;

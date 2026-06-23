@@ -28,6 +28,18 @@ export class AssemblyAiApi implements ICredentialType {
 			description:
 				'Your AssemblyAI API key. You can find this in your AssemblyAI dashboard at https://www.assemblyai.com/app',
 		},
+		{
+			displayName: 'Data Region',
+			name: 'region',
+			type: 'options',
+			default: 'us',
+			options: [
+				{ name: 'US (Default)', value: 'us' },
+				{ name: 'EU (Data Residency)', value: 'eu' },
+			],
+			description:
+				'Which AssemblyAI region to route requests to. EU keeps audio and transcription data within the European Union.',
+		},
 	];
 
 	authenticate: IAuthenticateGeneric = {
@@ -41,7 +53,7 @@ export class AssemblyAiApi implements ICredentialType {
 
 	test: ICredentialTestRequest = {
 		request: {
-			baseURL: 'https://api.assemblyai.com/v2',
+			baseURL: '={{$credentials.region === "eu" ? "https://api.eu.assemblyai.com/v2" : "https://api.assemblyai.com/v2"}}',
 			url: '/transcript',
 			method: 'GET',
 			headers: {

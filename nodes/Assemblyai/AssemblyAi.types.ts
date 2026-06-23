@@ -1,6 +1,6 @@
 export interface IAdditionalFields {
 	// Speech recognition options
-	speech_model?: 'universal' | 'universal-2' | 'universal-3-pro' | 'slam-1' | 'best' | 'nano';
+	speech_model?: 'universal' | 'universal-2' | 'universal-3-pro' | 'universal-3-5-pro';
 	speech_models?: string; // Comma-separated list
 	language_code?: string;
 	language_codes?: string; // Comma-separated list for code switching
@@ -9,6 +9,7 @@ export interface IAdditionalFields {
 		options?: {
 			expected_languages?: string;
 			fallback_language?: string;
+			code_switching?: boolean;
 			code_switching_confidence_threshold?: number;
 		};
 	};
@@ -21,6 +22,7 @@ export interface IAdditionalFields {
 	audio_end_at?: number;
 	speech_threshold?: number;
 	prompt?: string;
+	temperature?: number;
 	domain?: 'medical-v1';
 	remove_audio_tags?: 'all';
 
@@ -60,6 +62,7 @@ export interface IAdditionalFields {
 	};
 	redact_pii_policies?: string[];
 	redact_pii_return_unredacted?: boolean;
+	redact_static_entities?: unknown; // Raw fixedCollection from n8n UI; transformed in execute()
 
 	// Webhooks
 	webhook_url?: string;
@@ -117,7 +120,7 @@ export interface ITranscriptCreateBody {
 	audio_url: string;
 
 	// Speech recognition options
-	speech_model?: 'universal' | 'universal-2' | 'universal-3-pro' | 'slam-1' | 'best' | 'nano';
+	speech_model?: 'universal' | 'universal-2' | 'universal-3-pro' | 'universal-3-5-pro';
 	speech_models?: string[]; // Array of speech models in priority order
 	language_code?: string;
 	language_codes?: string[]; // Array for code switching
@@ -125,6 +128,7 @@ export interface ITranscriptCreateBody {
 	language_detection_options?: {
 		expected_languages?: string[];
 		fallback_language?: string;
+		code_switching?: boolean;
 		code_switching_confidence_threshold?: number;
 	};
 	language_confidence_threshold?: number;
@@ -137,6 +141,7 @@ export interface ITranscriptCreateBody {
 	audio_end_at?: number;
 	speech_threshold?: number;
 	prompt?: string;
+	temperature?: number;
 	domain?: 'medical-v1';
 	remove_audio_tags?: 'all';
 
@@ -172,6 +177,7 @@ export interface ITranscriptCreateBody {
 	};
 	redact_pii_policies?: string[];
 	redact_pii_return_unredacted?: boolean;
+	redact_static_entities?: Record<string, string[]>;
 
 	// Webhooks
 	webhook_url?: string;
